@@ -67,6 +67,11 @@ void main(
   o5.x = r0.x;
   o5.zw = float2(0,0);
   o6.xyzw = v0.xyzw;
+    
+float depth = StereoParams.Load(0).x; 
+float convergence = StereoParams.Load(0).y; 
+o6.x += depth * (o6.w - convergence);
+
   return;
 }
 
