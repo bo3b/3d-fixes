@@ -299,9 +299,21 @@ uint r0_w = (uint)r0.w;
   r4.z = vClusterGridSize.z * r4.z;
   r4.z = min(r4.w, r4.z);
   u_r13.z = (uint)r4.z;
-  r4.zw = LightClusterOffsetsRead.Load(u_r13.xyzw).xy;
-  r6.w = (uint)r4.w >> 24;
-  r7.w = lightClustersRead.Load(r4.z).x;
+  
+// This returns a uint2 as defined, so set temporary variable.
+// The idea is that until we see r4 being redefined, that we can
+// and should use the uint version.
+uint4 u_r4;
+u_r4.zw = LightClusterOffsetsRead.Load(u_r13.xyzw).xy;
+  
+  r6.w = (uint)u_r4.w >> 24;
+  
+// Also returns a uint from the load, so set temp variable to match. 
+// Even though it's single uint return, it's cleaner matching if we
+// use uint4 to allow for u_r7.w form.
+uint4 u_r7;
+u_r7.w = lightClustersRead.Load(u_r4.z).x;
+
   r8.w = dot(r9.xyz, r9.xyz);
   r8.w = rsqrt(r8.w);
   r9.xyz = r9.xyz * r8.www;
@@ -315,9 +327,9 @@ uint r0_w = (uint)r0.w;
   r12.xyz = r12.xyz * r4.yyy;
   r16.xyz = r1.xyz;
   r17.xyz = r5.xyz;
-  r4.y = r4.z;
+  r4.y = u_r4.z;
   r8.w = 0;
-  r9.w = r7.w;
+  r9.w = u_r7.w;
   while (true) {
     r12.w = cmp((uint)r8.w >= (uint)r6.w);
     if (r12.w != 0) break;
@@ -405,9 +417,9 @@ uint r0_w = (uint)r0.w;
     r8.w = (int)r8.w + 1;
     r9.w = r12.w;
   }
-  if (6 == 0) r1.x = 0; else if (6+18 < 32) {   r1.x = (uint)r4.w << (32-(6 + 18)); r1.x = (uint)r1.x >> (32-6);  } else r1.x = (uint)r4.w >> 18;
-  if (6 == 0) r1.y = 0; else if (6+12 < 32) {   r1.y = (uint)r4.w << (32-(6 + 12)); r1.y = (uint)r1.y >> (32-6);  } else r1.y = (uint)r4.w >> 12;
-  if (6 == 0) r1.z = 0; else if (6+6 < 32) {   r1.z = (uint)r4.w << (32-(6 + 6)); r1.z = (uint)r1.z >> (32-6);  } else r1.z = (uint)r4.w >> 6;
+  if (6 == 0) r1.x = 0; else if (6+18 < 32) {   r1.x = (uint)u_r4.w << (32-(6 + 18)); r1.x = (uint)r1.x >> (32-6);  } else r1.x = (uint)u_r4.w >> 18;
+  if (6 == 0) r1.y = 0; else if (6+12 < 32) {   r1.y = (uint)u_r4.w << (32-(6 + 12)); r1.y = (uint)r1.y >> (32-6);  } else r1.y = (uint)u_r4.w >> 12;
+  if (6 == 0) r1.z = 0; else if (6+6 < 32) {   r1.z = (uint)u_r4.w << (32-(6 + 6)); r1.z = (uint)r1.z >> (32-6);  } else r1.z = (uint)u_r4.w >> 6;
   r1.x = (int)-r1.y + (int)r1.x;
   r2.x = lightClustersRead.Load(r4.y).x;
   r4.xz = -r5.ww * float2(0.699999988,0.99000001) + float2(1,1);
@@ -433,13 +445,13 @@ uint r0_w = (uint)r0.w;
   r12.xyz = r17.xyz;
   r5.w = r4.y;
   r6.w = 0;
-  r7.w = r2.x;
+  u_r7.w = r2.x;
   while (true) {
     r9.w = cmp((uint)r6.w >= (uint)r1.x);
     if (r9.w != 0) break;
     r5.w = (int)r5.w + 1;
     r9.w = lightClustersRead.Load(r5.w).x;
-    r13.xyz = -v2.xyz * r2.zzz + PointLightPositions[r7.w].xyz;
+    r13.xyz = -v2.xyz * r2.zzz + PointLightPositions[u_r7.w].xyz;
     r11.w = dot(r13.xyz, r13.xyz);
     r11.w = sqrt(r11.w);
     r8.xyz = r13.xyz / r11.www;
@@ -447,25 +459,25 @@ uint r0_w = (uint)r0.w;
 // Wrong command.  Using cb5, should be cb6
 // r12.w = -PointLightShadowData[r7.w+512].mShadowMat + r11.w;
 // add r12.w, r11.w, -cb6[r7.w + 512].x
-r12.w = -PointLightExtData[r7.w].fBulbRadius + r11.w;
+r12.w = -PointLightExtData[u_r7.w].fBulbRadius + r11.w;
 
     r12.w = max(9.99999997e-007, r12.w);
-    if (8 == 0) r13.x = 0; else if (8+16 < 32) {     r13.x = (uint)PointLightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r13.x = (uint)r13.x >> (32-8);    } else r13.x = (uint)PointLightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
-    r13.y = 255 & (int)PointLightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex;
+    if (8 == 0) r13.x = 0; else if (8+16 < 32) {     r13.x = (uint)PointLightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r13.x = (uint)r13.x >> (32-8);    } else r13.x = (uint)PointLightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
+    r13.y = 255 & (int)PointLightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex;
     r13.x = (int)r0_w & (int)r13.x;
     r13.x = cmp((int)r13.y == (int)r13.x);
     r13.x = r13.x ? 1.000000 : 0;
     r12.w = r12.w * r12.w + 9.99999997e-007;
     r12.w = 1 / r12.w;
-    r13.y = PointLightExtData[r7.w].fRadialFalloff * PointLightPositions[r7.w].w;
-    r11.w = -PointLightPositions[r7.w].w + r11.w;
+    r13.y = PointLightExtData[u_r7.w].fRadialFalloff * PointLightPositions[u_r7.w].w;
+    r11.w = -PointLightPositions[u_r7.w].w + r11.w;
     r13.y = 1 / -r13.y;
     r11.w = saturate(r13.y * r11.w);
     r13.y = r11.w * -2 + 3;
     r11.w = r11.w * r11.w;
     r11.w = r13.y * r11.w;
     r11.w = r12.w * r11.w;
-    r13.xyz = PointLightColors[r7.w].vColor.xyz * r13.xxx;
+    r13.xyz = PointLightColors[u_r7.w].vColor.xyz * r13.xxx;
     r13.xyz = r13.xyz * r11.www;
     r11.w = dot(r8.xyzw, r10.xyzw);
     r11.w = saturate(Light_SSDOParams.x * r11.w);
@@ -513,7 +525,7 @@ r12.w = -PointLightExtData[r7.w].fBulbRadius + r11.w;
     r13.xyz = r13.xyz * r18.xyz;
     r12.xyz = r13.xyz * r8.xxx + r12.xyz;
     r6.w = (int)r6.w + 1;
-    r7.w = r9.w;
+    u_r7.w = r9.w;
   }
   r1.x = lightClustersRead.Load(r5.w).x;
   r14.w = 1;
@@ -524,10 +536,10 @@ r12.w = -PointLightExtData[r7.w].fBulbRadius + r11.w;
   r4.y = 0;
   r6.w = r1.x;
   while (true) {
-    r7.w = cmp((uint)r4.y >= (uint)r1.y);
-    if (r7.w != 0) break;
+    u_r7.w = cmp((uint)r4.y >= (uint)r1.y);
+    if (u_r7.w != 0) break;
     r2.x = (int)r2.x + 1;
-    r7.w = lightClustersRead.Load(r2.x).x;
+    u_r7.w = lightClustersRead.Load(r2.x).x;
     r16.xyz = -v2.xyz * r2.zzz + PointLightPositions[r6.w].xyz;
     r9.w = (int)r6.w + (int)viShadowIndexOffset.x;
     r17.xyzw = cmp(abs(r16.yzxz) < abs(r16.xxyy));
@@ -690,9 +702,9 @@ r12.w = -PointLightExtData[r6.w].fBulbRadius + r11.w;
     r16.xyz = r16.xyz * r18.xyz;
     r15.xyz = r16.xyz * r8.xxx + r15.xyz;
     r4.y = (int)r4.y + 1;
-    r6.w = r7.w;
+    r6.w = u_r7.w;
   }
-  r1.x = (int)r4.w & 63;
+  r1.x = (int)u_r4.w & 63;
   r1.y = (int)-r1.x + (int)r1.z;
   r1.z = lightClustersRead.Load(r2.x).x;
   r14.w = 1;
@@ -700,17 +712,17 @@ r12.w = -PointLightExtData[r6.w].fBulbRadius + r11.w;
   r9.xyz = r13.xyz;
   r12.xyz = r15.xyz;
   r4.y = r2.x;
-  r4.w = 0;
+  u_r4.w = 0;
   r5.w = r1.z;
   while (true) {
-    r6.w = cmp((uint)r4.w >= (uint)r1.y);
+    r6.w = cmp((uint)u_r4.w >= (uint)r1.y);
     if (r6.w != 0) break;
     r4.yw = (int)r4.yw + int2(1,1);
     r6.w = lightClustersRead.Load(r4.y).x;
-    r7.w = (int)r5.w * 6;
-    if (8 == 0) r16.x = 0; else if (8+16 < 32) {     r16.x = (uint)SpotlightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r16.x = (uint)r16.x >> (32-8);    } else r16.x = (uint)SpotlightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
-    if (8 == 0) r16.y = 0; else if (8+8 < 32) {     r16.y = (uint)SpotlightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 8)); r16.y = (uint)r16.y >> (32-8);    } else r16.y = (uint)SpotlightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 8;
-    r9.w = 255 & (int)SpotlightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex;
+    u_r7.w = (int)r5.w * 6;
+    if (8 == 0) r16.x = 0; else if (8+16 < 32) {     r16.x = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r16.x = (uint)r16.x >> (32-8);    } else r16.x = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
+    if (8 == 0) r16.y = 0; else if (8+8 < 32) {     r16.y = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 8)); r16.y = (uint)r16.y >> (32-8);    } else r16.y = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 8;
+    r9.w = 255 & (int)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex;
     r11.w = (int)r0_w & (int)r16.x;
     r9.w = cmp((int)r9.w == (int)r11.w);
     r9.w = r9.w ? 1.000000 : 0;
@@ -723,10 +735,10 @@ r12.w = -PointLightExtData[r6.w].fBulbRadius + r11.w;
 // dp4 r17.y, cb7[r7.w + 770].xyzw, r14.xyzw
 // dp4 r11.w, cb7[r7.w + 771].xyzw, r14.xyzw
 // dp4 r12.w, cb7[r7.w + 772].xyzw, r14.xyzw
-r17.x = dot(SpotlightExtData[r7.w/4].mProj._m00_m01_m02_m03, r14.xyzw);
-r17.y = dot(SpotlightExtData[r7.w/4].mProj._m10_m11_m12_m13, r14.xyzw);
-r11.w = dot(SpotlightExtData[r7.w/4].mProj._m20_m21_m22_m23, r14.xyzw);
-r12.w = dot(SpotlightExtData[r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
+r17.x = dot(SpotlightExtData[u_r7.w/4].mProj._m00_m01_m02_m03, r14.xyzw);
+r17.y = dot(SpotlightExtData[u_r7.w/4].mProj._m10_m11_m12_m13, r14.xyzw);
+r11.w = dot(SpotlightExtData[u_r7.w/4].mProj._m20_m21_m22_m23, r14.xyzw);
+r12.w = dot(SpotlightExtData[u_r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
 	
     r12.w = max(9.99999975e-006, r12.w);
     r16.xz = r17.xy / r12.ww;
@@ -746,7 +758,9 @@ r12.w = dot(SpotlightExtData[r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r13.w = max(9.99999997e-007, r13.w);
     r13.w = r13.w * r13.w + 9.99999997e-007;
     r13.w = 1 / r13.w;
-    r7.w = SpotlightExtData[r7.w].fRadialFalloff * SpotlightPositions[r11.w].w;
+	
+// Assignment here is a float, so switch back to using normal temp.	
+    r7.w = SpotlightExtData[u_r7.w].fRadialFalloff * SpotlightPositions[r11.w].w;
     r11.w = -SpotlightPositions[r11.w].w + r12.w;
     r7.w = 1 / -r7.w;
     r7.w = saturate(r11.w * r7.w);
@@ -810,14 +824,17 @@ r12.w = dot(SpotlightExtData[r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
   r15.xyz = r12.xyz;
   r1.z = r4.y;
   r2.x = 0;
-  r4.w = r1.y;
+  u_r4.w = r1.y;
   while (true) {
     r5.w = cmp((uint)r2.x >= (uint)r1.x);
     if (r5.w != 0) break;
     r1.z = (int)r1.z + 1;
     r5.w = lightClustersRead.Load(r1.z).x;
-    r6.w = (int)r4.w * 6;
-    r7.w = (uint)r4.w << 1;
+    r6.w = (int)u_r4.w * 6;
+	
+// New use of r7.w as an index to array, clearly a uint.
+// Reuse the above u_r7 temp variable.	
+    u_r7.w = (uint)u_r4.w << 1;
 	
 // r16.x = dot(SpotlightExtData[r6.w/4]._m00_m01_m02_m03, r14.xyzw);
 // r16.y = dot(SpotlightExtData[r6.w/4]._m10_m11_m12_m13, r14.xyzw);
@@ -843,11 +860,11 @@ r11.w = dot(SpotlightExtData[r6.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r11.w = r11.w ? 1.000000 : 0;
     r16.z = (uint)r17.y;
     r17.xyz = MyProjectorPool.SampleLevel(LinearClampSampler_s, r16.xyz, 0).xyz;
-    r17.xyz = SpotlightColors[r4.w].xyz * r17.xyz;
+    r17.xyz = SpotlightColors[u_r4.w].xyz * r17.xyz;
     r12.w = cmp(-0.00200000009 < r9.w);
     r12.w = r12.w ? 1.000000 : 0;
     r17.xyz = r17.xyz * r12.www;
-    r9.w = r9.w / SpotlightPositions[r7.w].w;
+    r9.w = r9.w / SpotlightPositions[u_r7.w].w;
     r16.w = 1 + -r16.y;
     r16.xy = r16.xw * SpotlightExtData[r6.w].vAtlas.zz + SpotlightExtData[r6.w].vAtlas.xy;
     r9.w = -SpotlightExtData[r6.w].vAtlas.w + r9.w;
@@ -910,7 +927,7 @@ r11.w = dot(SpotlightExtData[r6.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r9.w = shadowPool.SampleCmpLevelZero(SAMPLER_STATE_depthMapSampler_s, r16.xy, r9.w).x;
     r9.w = r13.w * r9.w + r12.w;
     r9.w = r9.w * r11.w;
-    r16.xyz = -v2.xyz * r2.zzz + SpotlightPositions[r7.w].xyz;
+    r16.xyz = -v2.xyz * r2.zzz + SpotlightPositions[u_r7.w].xyz;
     r11.w = dot(r16.xyz, r16.xyz);
     r11.w = sqrt(r11.w);
     r8.xyz = r16.xyz / r11.www;
@@ -919,8 +936,10 @@ r11.w = dot(SpotlightExtData[r6.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r9.w = 0.0069444445 * r9.w;
     r12.w = r12.w * r12.w + 9.99999997e-007;
     r12.w = 1 / r12.w;
-    r6.w = SpotlightExtData[r6.w].fRadialFalloff * SpotlightPositions[r7.w].w;
-    r7.w = -SpotlightPositions[r7.w].w + r11.w;
+    r6.w = SpotlightExtData[r6.w].fRadialFalloff * SpotlightPositions[u_r7.w].w;
+
+// No longer use u_r7, as it is redefined here, and clearly a float.	
+    r7.w = -SpotlightPositions[u_r7.w].w + r11.w;
     r6.w = 1 / -r6.w;
     r6.w = saturate(r7.w * r6.w);
     r7.w = r6.w * -2 + 3;
@@ -975,7 +994,7 @@ r11.w = dot(SpotlightExtData[r6.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r8.xyz = r8.xyz * r18.xyz;
     r15.xyz = r8.xyz * r6.www + r15.xyz;
     r2.x = (int)r2.x + 1;
-    r4.w = r5.w;
+    u_r4.w = r5.w;
   }
   o0.xyz = r13.xyz;
   o1.xyz = r15.xyz * r2.yyy;
