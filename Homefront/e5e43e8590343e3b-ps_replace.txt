@@ -599,14 +599,18 @@ if (8 == 0) i_r13.x = 0; else if (8+16 < 32) {     i_r13.x = (uint)PointLightExt
     u_r6.w = (int)u_r6.w + 1;
     u_r7.w = u_r9.w;
   }
-  r1.x = lightClustersRead.Load(u_r5.w).x;
+  
+// Always returns uint here, so make temp match.
+uint4 u_r1;
+  u_r1.x = lightClustersRead.Load(u_r5.w).x;
+
   r14.w = 1;
   r8.w = 0.282090008;
   r13.xyz = r9.xyz;
   r15.xyz = r12.xyz;
   u_r2.x = u_r5.w;
   u_r4.y = 0;
-  u_r6.w = r1.x;
+  u_r6.w = u_r1.x;
   
 // ----------- Third Loop --------------
   while (true) {
@@ -805,7 +809,6 @@ if (8 == 0) i_r13.w = 0; else if (8+16 < 32) {     i_r13.w = (uint)PointLightExt
   i_r1.x = (int)u_r4.w & 63;
   i_r1.y = (int)-i_r1.x + (int)i_r1.z;
 
-uint4 u_r1;  
 u_r1.z = lightClustersRead.Load(u_r2.x).x;
 
   r14.w = 1;
@@ -822,7 +825,10 @@ u_r1.z = lightClustersRead.Load(u_r2.x).x;
     if (u_r6.w != 0) break;
     u_r4.yw = (int)u_r4.yw + int2(1,1);
     u_r6.w = lightClustersRead.Load(u_r4.y).x;
-    u_r7.w = (int)u_r5.w * 6;
+
+// Another array index calculation.  Killing this
+// allows HLSL to generate the ishl it wants.
+    u_r7.w = (int)u_r5.w; // * 6;
 	
 // This generates a ubfe instruction. By definition a ubfe instruction 
 // returns a uint, as it is a bitfield operation.  
@@ -831,10 +837,12 @@ uint4 i_r16;
 if (8 == 0) i_r16.x = 0; else if (8+16 < 32) {     i_r16.x = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); i_r16.x = (uint)i_r16.x >> (32-8);    } else i_r16.x = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
 if (8 == 0) i_r16.y = 0; else if (8+8 < 32) {     i_r16.y = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 8)); i_r16.y = (uint)i_r16.y >> (32-8);    } else i_r16.y = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 8;
 	
-    r9.w = 255 & (int)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex;
-    r11.w = (int)r0_w & (int)i_r16.x;
-    r9.w = cmp((int)r9.w == (int)r11.w);
-    r9.w = r9.w ? 1.000000 : 0;
+uint4 u_r9;	
+    u_r9.w = 255 & (int)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex;
+uint4 u_r11;
+    u_r11.w = (int)r0_w & (int)i_r16.x;
+    u_r9.w = cmp((int)u_r9.w == (int)u_r11.w);
+    u_r9.w = u_r9.w ? 1.000000 : 0;
 	
 // r17.x = dot(SpotlightExtData[r7.w/4]._m00_m01_m02_m03, r14.xyzw);
 // r17.y = dot(SpotlightExtData[r7.w/4]._m10_m11_m12_m13, r14.xyzw);
@@ -844,10 +852,10 @@ if (8 == 0) i_r16.y = 0; else if (8+8 < 32) {     i_r16.y = (uint)SpotlightExtDa
 // dp4 r17.y, cb7[r7.w + 770].xyzw, r14.xyzw
 // dp4 r11.w, cb7[r7.w + 771].xyzw, r14.xyzw
 // dp4 r12.w, cb7[r7.w + 772].xyzw, r14.xyzw
-r17.x = dot(SpotlightExtData[u_r7.w/4].mProj._m00_m01_m02_m03, r14.xyzw);
-r17.y = dot(SpotlightExtData[u_r7.w/4].mProj._m10_m11_m12_m13, r14.xyzw);
-r11.w = dot(SpotlightExtData[u_r7.w/4].mProj._m20_m21_m22_m23, r14.xyzw);
-r12.w = dot(SpotlightExtData[u_r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
+r17.x = dot(SpotlightExtData[u_r7.w].mProj._m00_m01_m02_m03, r14.xyzw);
+r17.y = dot(SpotlightExtData[u_r7.w].mProj._m10_m11_m12_m13, r14.xyzw);
+r11.w = dot(SpotlightExtData[u_r7.w].mProj._m20_m21_m22_m23, r14.xyzw);
+r12.w = dot(SpotlightExtData[u_r7.w].mProj._m30_m31_m32_m33, r14.xyzw);
 	
     r12.w = max(9.99999975e-006, r12.w);
     r16.xz = r17.xy / r12.ww;
@@ -863,7 +871,7 @@ r12.w = dot(SpotlightExtData[u_r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r12.w = dot(r17.xyz, r17.xyz);
     r12.w = sqrt(r12.w);
     r8.xyz = r17.xyz / r12.www;
-    r13.w = -SpotlightExtData[r7.w].fBulbRadius + r12.w;
+    r13.w = -SpotlightExtData[u_r7.w].fBulbRadius + r12.w;
     r13.w = max(9.99999997e-007, r13.w);
     r13.w = r13.w * r13.w + 9.99999997e-007;
     r13.w = 1 / r13.w;
@@ -877,7 +885,7 @@ r12.w = dot(SpotlightExtData[u_r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r7.w = r7.w * r7.w;
     r7.w = r11.w * r7.w;
     r7.w = r13.w * r7.w;
-    r16.xyz = r16.xyz * r9.www;
+    r16.xyz = r16.xyz * u_r9.www;
     r16.xyz = r16.xyz * r7.www;
     r7.w = dot(r8.xyzw, r10.xyzw);
     r7.w = saturate(Light_SSDOParams.x * r7.w);
