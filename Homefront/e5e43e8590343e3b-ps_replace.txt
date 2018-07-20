@@ -437,7 +437,12 @@ void main(
     r11.w = dot(r13.xyz, r13.xyz);
     r11.w = sqrt(r11.w);
     r8.xyz = r13.xyz / r11.www;
-    r12.w = -PointLightShadowData[r7.w+512].mShadowMat + r11.w;
+
+// Wrong command.  Using cb5, should be cb6
+// r12.w = -PointLightShadowData[r7.w+512].mShadowMat + r11.w;
+// add r12.w, r11.w, -cb6[r7.w + 512].x
+r12.w = -PointLightExtData[r7.w].fBulbRadius + r11.w;
+
     r12.w = max(9.99999997e-007, r12.w);
     if (8 == 0) r13.x = 0; else if (8+16 < 32) {     r13.x = (uint)PointLightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r13.x = (uint)r13.x >> (32-8);    } else r13.x = (uint)PointLightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
     r13.y = 255 & (int)PointLightExtData[r7.w].nFlagsAndVisIDAndTiledPoolIndex;
@@ -598,7 +603,12 @@ void main(
     r11.w = dot(r16.xyz, r16.xyz);
     r11.w = sqrt(r11.w);
     r8.xyz = r16.xyz / r11.www;
-    r12.w = -PointLightShadowData[r6.w+512].mShadowMat + r11.w;
+
+// Wrong buffer, should be cb6 not cb5	
+// r12.w = -PointLightShadowData[r6.w+512].mShadowMat + r11.w;
+// add r12.w, r11.w, -cb6[r6.w + 512].x
+r12.w = -PointLightExtData[r6.w].fBulbRadius + r11.w;
+
     r12.w = max(9.99999997e-007, r12.w);
     if (8 == 0) r13.w = 0; else if (8+16 < 32) {     r13.w = (uint)PointLightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r13.w = (uint)r13.w >> (32-8);    } else r13.w = (uint)PointLightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
     r15.w = 255 & (int)PointLightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex;
