@@ -532,11 +532,21 @@ r12.w = -PointLightExtData[r7.w].fBulbRadius + r11.w;
     r11.w = r17.x ? r18.x : r11.w;
     r11.w = (int)r11.w * 5;
     r9.w = mad((int)r9.w, 30, (int)r11.w);
-    r17.x = dot(PointLightShadowData[r9.w/4]._m00_m01_m02_m03, r14.xyzw);
-    r17.y = dot(PointLightShadowData[r9.w/4]._m10_m11_m12_m13, r14.xyzw);
-    r11.w = dot(PointLightShadowData[r9.w/4]._m20_m21_m22_m23, r14.xyzw);
-    r12.w = dot(PointLightShadowData[r9.w/4]._m30_m31_m32_m33, r14.xyzw);
-    r12.w = max(9.99999975e-006, r12.w);
+	
+// r17.x = dot(PointLightShadowData[r9.w/4]._m00_m01_m02_m03, r14.xyzw);
+// r17.y = dot(PointLightShadowData[r9.w/4]._m10_m11_m12_m13, r14.xyzw);
+// r11.w = dot(PointLightShadowData[r9.w/4]._m20_m21_m22_m23, r14.xyzw);
+// r12.w = dot(PointLightShadowData[r9.w/4]._m30_m31_m32_m33, r14.xyzw);
+// dp4 r17.x, cb5[r9.w + 1].xyzw, r14.xyzw
+// dp4 r17.y, cb5[r9.w + 2].xyzw, r14.xyzw
+// dp4 r11.w, cb5[r9.w + 3].xyzw, r14.xyzw
+// dp4 r12.w, cb5[r9.w + 4].xyzw, r14.xyzw
+r17.x = dot(PointLightShadowData[r9.w/4].mShadowMat._m00_m01_m02_m03, r14.xyzw);
+r17.y = dot(PointLightShadowData[r9.w/4].mShadowMat._m10_m11_m12_m13, r14.xyzw);
+r11.w = dot(PointLightShadowData[r9.w/4].mShadowMat._m20_m21_m22_m23, r14.xyzw);
+r12.w = dot(PointLightShadowData[r9.w/4].mShadowMat._m30_m31_m32_m33, r14.xyzw);
+
+	r12.w = max(9.99999975e-006, r12.w);
     r17.xy = r17.xy / r12.ww;
     r17.xy = r17.xy * float2(0.5,-0.5) + float2(0.5,0.5);
     r17.xy = r17.xy * PointLightShadowData[r9.w].vAtlas.zz + PointLightShadowData[r9.w].vAtlas.xy;
@@ -698,10 +708,20 @@ r12.w = -PointLightExtData[r6.w].fBulbRadius + r11.w;
     r11.w = (int)r0.w & (int)r16.x;
     r9.w = cmp((int)r9.w == (int)r11.w);
     r9.w = r9.w ? 1.000000 : 0;
-    r17.x = dot(SpotlightExtData[r7.w/4]._m00_m01_m02_m03, r14.xyzw);
-    r17.y = dot(SpotlightExtData[r7.w/4]._m10_m11_m12_m13, r14.xyzw);
-    r11.w = dot(SpotlightExtData[r7.w/4]._m20_m21_m22_m23, r14.xyzw);
-    r12.w = dot(SpotlightExtData[r7.w/4]._m30_m31_m32_m33, r14.xyzw);
+	
+// r17.x = dot(SpotlightExtData[r7.w/4]._m00_m01_m02_m03, r14.xyzw);
+// r17.y = dot(SpotlightExtData[r7.w/4]._m10_m11_m12_m13, r14.xyzw);
+// r11.w = dot(SpotlightExtData[r7.w/4]._m20_m21_m22_m23, r14.xyzw);
+// r12.w = dot(SpotlightExtData[r7.w/4]._m30_m31_m32_m33, r14.xyzw);
+// dp4 r17.x, cb7[r7.w + 769].xyzw, r14.xyzw
+// dp4 r17.y, cb7[r7.w + 770].xyzw, r14.xyzw
+// dp4 r11.w, cb7[r7.w + 771].xyzw, r14.xyzw
+// dp4 r12.w, cb7[r7.w + 772].xyzw, r14.xyzw
+r17.x = dot(SpotlightExtData[r7.w/4].mProj._m00_m01_m02_m03, r14.xyzw);
+r17.y = dot(SpotlightExtData[r7.w/4].mProj._m10_m11_m12_m13, r14.xyzw);
+r11.w = dot(SpotlightExtData[r7.w/4].mProj._m20_m21_m22_m23, r14.xyzw);
+r12.w = dot(SpotlightExtData[r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
+	
     r12.w = max(9.99999975e-006, r12.w);
     r16.xz = r17.xy / r12.ww;
     r17.xy = r16.xz * float2(0.5,0.5) + float2(0.5,0.5);
@@ -792,11 +812,21 @@ r12.w = -PointLightExtData[r6.w].fBulbRadius + r11.w;
     r5.w = lightClustersRead.Load(r1.z).x;
     r6.w = (int)r4.w * 6;
     r7.w = (uint)r4.w << 1;
-    r16.x = dot(SpotlightExtData[r6.w/4]._m00_m01_m02_m03, r14.xyzw);
-    r16.y = dot(SpotlightExtData[r6.w/4]._m10_m11_m12_m13, r14.xyzw);
-    r9.w = dot(SpotlightExtData[r6.w/4]._m20_m21_m22_m23, r14.xyzw);
-    r11.w = dot(SpotlightExtData[r6.w/4]._m30_m31_m32_m33, r14.xyzw);
-    r11.w = max(9.99999975e-006, r11.w);
+	
+// r16.x = dot(SpotlightExtData[r6.w/4]._m00_m01_m02_m03, r14.xyzw);
+// r16.y = dot(SpotlightExtData[r6.w/4]._m10_m11_m12_m13, r14.xyzw);
+// r9.w = dot(SpotlightExtData[r6.w/4]._m20_m21_m22_m23, r14.xyzw);
+// r11.w = dot(SpotlightExtData[r6.w/4]._m30_m31_m32_m33, r14.xyzw);
+// dp4 r16.x, cb7[r6.w + 769].xyzw, r14.xyzw
+// dp4 r16.y, cb7[r6.w + 770].xyzw, r14.xyzw
+// dp4 r9.w, cb7[r6.w + 771].xyzw, r14.xyzw
+// dp4 r11.w, cb7[r6.w + 772].xyzw, r14.xyzw
+r16.x = dot(SpotlightExtData[r6.w/4].mProj._m00_m01_m02_m03, r14.xyzw);
+r16.y = dot(SpotlightExtData[r6.w/4].mProj._m10_m11_m12_m13, r14.xyzw);
+r9.w = dot(SpotlightExtData[r6.w/4].mProj._m20_m21_m22_m23, r14.xyzw);
+r11.w = dot(SpotlightExtData[r6.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
+    
+	r11.w = max(9.99999975e-006, r11.w);
     r16.xy = r16.xy / r11.ww;
     r16.xy = r16.xy * float2(0.5,0.5) + float2(0.5,0.5);
     if (8 == 0) r17.x = 0; else if (8+16 < 32) {     r17.x = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r17.x = (uint)r17.x >> (32-8);    } else r17.x = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
