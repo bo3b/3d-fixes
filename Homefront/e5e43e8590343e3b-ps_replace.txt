@@ -274,10 +274,10 @@ void main(
   r4.zw = min(vDownscaleParams.xy, r4.zw);
   
 // Convert r13 to u_r13 to avoid float conversions
-uint4 u_r13;  
-  u_r13.xy = (int)r4.zw;
-  u_r13.w = 0;
-  r4.z = DepthBufferMax.Load(u_r13.xyw).x;
+int4 i_r13;  
+  i_r13.xy = (int)r4.zw;
+  i_r13.w = 0;
+  r4.z = DepthBufferMax.Load(i_r13.xyw).x;
   r4.w = 9.99999975e-005 + r4.z;
   r4.w = cmp(r4.w < r2.z);
   if (r4.w != 0) {
@@ -298,13 +298,13 @@ uint r0_w = (uint)r0.w;
   r4.z = sqrt(r4.z);
   r4.z = vClusterGridSize.z * r4.z;
   r4.z = min(r4.w, r4.z);
-  u_r13.z = (uint)r4.z;
+  i_r13.z = (uint)r4.z;
   
 // This returns a uint2 as defined, so set temporary variable.
 // The idea is that until we see r4 being redefined, that we can
 // and should use the uint version.
 uint4 u_r4;
-u_r4.zw = LightClusterOffsetsRead.Load(u_r13.xyzw).xy;
+u_r4.zw = LightClusterOffsetsRead.Load(i_r13.xyzw).xy;
   
   r6.w = (uint)u_r4.w >> 24;
   
@@ -317,7 +317,7 @@ u_r7.w = lightClustersRead.Load(u_r4.z).x;
   r8.w = dot(r9.xyz, r9.xyz);
   r8.w = rsqrt(r8.w);
   r9.xyz = r9.xyz * r8.www;
-  u_r13.xyz = cmp(float3(0,0,0) < r9.xyz);
+  i_r13.xyz = cmp(float3(0,0,0) < r9.xyz);
   r15.xyz = cmp(float3(0,0,0) < r11.xyz);
   r8.w = dot(float2(1,0.282090008), r10.zw);
   r8.w = saturate(Light_SSDOParams.y * r8.w);
@@ -335,24 +335,24 @@ u_r7.w = lightClustersRead.Load(u_r4.z).x;
     if (r12.w != 0) break;
     r4.y = (int)r4.y + 1;
     r12.w = lightClustersRead.Load(r4.y).x;
-    u_r13.w = (uint)r9.w << 3;
+    i_r13.w = (uint)r9.w << 3;
     r18.xyz = -v2.xyz * r2.zzz + CubemapBoxPositions[r9.w].xyz;
     r15.w = dot(r18.xyz, r18.xyz);
     r15.w = sqrt(r15.w);
     r18.xyz = v2.xyz * r2.zzz + -CubemapBoxPositions[r9.w].xyz;
-    r19.x = dot(CubemapBoxExtData[u_r13.w].vFadeParams[0].xyz, r18.xyz);
-    r19.y = dot(CubemapBoxExtData[u_r13.w].vFadeParams[1].xyz, r18.xyz);
-    r19.z = dot(CubemapBoxExtData[u_r13.w].vFadeParams[2].xyz, r18.xyz);
+    r19.x = dot(CubemapBoxExtData[i_r13.w].vFadeParams[0].xyz, r18.xyz);
+    r19.y = dot(CubemapBoxExtData[i_r13.w].vFadeParams[1].xyz, r18.xyz);
+    r19.z = dot(CubemapBoxExtData[i_r13.w].vFadeParams[2].xyz, r18.xyz);
     r18.xyz = float3(-1,-1,-1) + r19.xyz;
-    r20.x = saturate(CubemapBoxExtData[u_r13.w].vFadeParams[0].w * r18.x);
-    r20.y = saturate(CubemapBoxExtData[u_r13.w].vFadeParams[1].w * r18.y);
-    r20.z = saturate(CubemapBoxExtData[u_r13.w].vFadeParams[2].w * r18.z);
+    r20.x = saturate(CubemapBoxExtData[i_r13.w].vFadeParams[0].w * r18.x);
+    r20.y = saturate(CubemapBoxExtData[i_r13.w].vFadeParams[1].w * r18.y);
+    r20.z = saturate(CubemapBoxExtData[i_r13.w].vFadeParams[2].w * r18.z);
     r18.xyz = float3(1,1,1) + r19.xyz;
-    r18.xyz = saturate(CubemapBoxExtData[u_r13.w].vFadeParams[3].xyz * r18.xyz);
+    r18.xyz = saturate(CubemapBoxExtData[i_r13.w].vFadeParams[3].xyz * r18.xyz);
     r18.xyz = r20.xyz * r18.xyz;
     r16.w = r18.x * r18.y;
     r16.w = r16.w * r18.z;
-    r17.w = CubemapBoxExtData[u_r13.w].fRadialFalloff * CubemapBoxPositions[r9.w].w;
+    r17.w = CubemapBoxExtData[i_r13.w].fRadialFalloff * CubemapBoxPositions[r9.w].w;
     r15.w = -CubemapBoxPositions[r9.w].w + r15.w;
     r17.w = 1 / -r17.w;
     r15.w = saturate(r17.w * r15.w);
@@ -360,37 +360,44 @@ u_r7.w = lightClustersRead.Load(u_r4.z).x;
     r15.w = r15.w * r15.w;
     r15.w = r17.w * r15.w;
     r15.w = r16.w * r15.w;
-    if (8 == 0) r16.w = 0; else if (8+8 < 32) {     r16.w = (uint)CubemapBoxExtData[u_r13.w].nFlagsAndVisID << (32-(8 + 8)); r16.w = (uint)r16.w >> (32-8);    } else r16.w = (uint)CubemapBoxExtData[u_r13.w].nFlagsAndVisID >> 8;
-    r17.w = 255 & (int)CubemapBoxExtData[u_r13.w].nFlagsAndVisID;
-    r16.w = (int)r0_w & (int)r16.w;
-    r16.w = cmp((int)r17.w == (int)r16.w);
-    r16.w = r16.w ? 1.000000 : 0;
-    r15.w = r16.w * r15.w;
-    r15.w = CubemapBoxExtData[u_r13.w].fCubemapContrib * r15.w;
-    r16.w = (int)CubemapBoxExtData[u_r13.w].nFlagsAndVisID >> 16;
-    r16.w = (int)r16.w & 2;
-    r18.xyz = CubemapBoxExtData[u_r13.w].vProjectionParams.xyz + CubemapBoxPositions[r9.w].xyz;
+
+// This generates a ubfe instruction. By definition a ubfe instruction 
+// returns an int, as it is a bitfield operation.  
+// Use an int temp variable, and anywhere this var is used, until redefined.
+int4 i_r16;
+if (8 == 0) i_r16.w = 0; else if (8+8 < 32) {     i_r16.w = (uint)CubemapBoxExtData[i_r13.w].nFlagsAndVisID << (32-(8 + 8)); i_r16.w = (uint)i_r16.w >> (32-8);    } else i_r16.w = (uint)CubemapBoxExtData[i_r13.w].nFlagsAndVisID >> 8;
+
+    r17.w = 255 & (int)CubemapBoxExtData[i_r13.w].nFlagsAndVisID;
+    i_r16.w = (int)r0_w & (int)i_r16.w;
+    i_r16.w = cmp((int)r17.w == (int)i_r16.w);
+    i_r16.w = i_r16.w ? 1.000000 : 0;
+    r15.w = i_r16.w * r15.w;
+    r15.w = CubemapBoxExtData[i_r13.w].fCubemapContrib * r15.w;
+    i_r16.w = (int)CubemapBoxExtData[i_r13.w].nFlagsAndVisID >> 16;
+    i_r16.w = (int)i_r16.w & 2;
+
+    r18.xyz = CubemapBoxExtData[i_r13.w].vProjectionParams.xyz + CubemapBoxPositions[r9.w].xyz;
     r18.xyz = -v2.xyz * r2.zzz + r18.xyz;
     r18.xyz = r18.xyz / r9.xyz;
-    r19.xyz = -CubemapBoxExtData[u_r13.w].vProjectionParams.xyz + CubemapBoxPositions[r9.w].xyz;
+    r19.xyz = -CubemapBoxExtData[i_r13.w].vProjectionParams.xyz + CubemapBoxPositions[r9.w].xyz;
     r19.xyz = -v2.xyz * r2.zzz + r19.xyz;
     r19.xyz = r19.xyz / r9.xyz;
-    r18.xyz = u_r13.xyz ? r18.xyz : r19.xyz;
+    r18.xyz = i_r13.xyz ? r18.xyz : r19.xyz;
     r17.w = min(r18.x, r18.y);
     r17.w = min(r17.w, r18.z);
     r18.xyz = r9.xyz * r17.www + r14.xyz;
     r18.xyz = -CubemapBoxPositions[r9.w].xyz + r18.xyz;
-    r18.xyz = -CubemapBoxExtData[u_r13.w].vSampleOffsetParams.xyz + r18.xyz;
-    r18.xyz = r16.www ? r18.xyz : r9.xyz;
-    r18.w = CubemapBoxExtData[u_r13.w].fTiledPoolIdx;
+    r18.xyz = -CubemapBoxExtData[i_r13.w].vSampleOffsetParams.xyz + r18.xyz;
+    r18.xyz = i_r16.www ? r18.xyz : r9.xyz;
+    r18.w = CubemapBoxExtData[i_r13.w].fTiledPoolIdx;
     r18.xyz = MyCubemapPoolSpec.SampleLevel(TrilinearWrapSampler_s, r18.xyzw, r4.x).xyz;
-    r18.xyz = CubemapBoxExtData[u_r13.w].vOcclusionDirAndSpecMult.www * r18.xyz;
-    r11.w = CubemapBoxExtData[u_r13.w].fTiledPoolIdx;
+    r18.xyz = CubemapBoxExtData[i_r13.w].vOcclusionDirAndSpecMult.www * r18.xyz;
+    r11.w = CubemapBoxExtData[i_r13.w].fTiledPoolIdx;
     r19.xyz = MyCubemapPoolDiff.SampleLevel(TrilinearWrapSampler_s, r11.xyzw, 0).xyz;
-    r20.xyz = CubemapBoxExtData[u_r13.w].vProjectionParams.xyz * float3(4,4,4) + CubemapBoxPositions[r9.w].xyz;
+    r20.xyz = CubemapBoxExtData[i_r13.w].vProjectionParams.xyz * float3(4,4,4) + CubemapBoxPositions[r9.w].xyz;
     r20.xyz = -v2.xyz * r2.zzz + r20.xyz;
     r20.xyz = r20.xyz / r11.xyz;
-    r21.xyz = -CubemapBoxExtData[u_r13.w].vProjectionParams.xyz * float3(4,4,4) + CubemapBoxPositions[r9.w].xyz;
+    r21.xyz = -CubemapBoxExtData[i_r13.w].vProjectionParams.xyz * float3(4,4,4) + CubemapBoxPositions[r9.w].xyz;
     r21.xyz = -v2.xyz * r2.zzz + r21.xyz;
     r21.xyz = r21.xyz / r11.xyz;
     r20.xyz = r15.xyz ? r20.xyz : r21.xyz;
@@ -398,15 +405,15 @@ u_r7.w = lightClustersRead.Load(u_r4.z).x;
     r11.w = min(r11.w, r20.z);
     r20.xyz = r11.xyz * r11.www + r14.xyz;
     r20.xyz = -CubemapBoxPositions[r9.w].xyz + r20.xyz;
-    r20.xyz = -CubemapBoxExtData[u_r13.w].vSampleOffsetParams.xyz + r20.xyz;
-    r20.xyz = r16.www ? r20.xyz : r11.xyz;
-    r20.w = CubemapBoxExtData[u_r13.w].fTiledPoolIdx;
+    r20.xyz = -CubemapBoxExtData[i_r13.w].vSampleOffsetParams.xyz + r20.xyz;
+    r20.xyz = i_r16.www ? r20.xyz : r11.xyz;
+    r20.w = CubemapBoxExtData[i_r13.w].fTiledPoolIdx;
     r20.xyz = MyCubemapPoolDiffNoSky.SampleLevel(TrilinearWrapSampler_s, r20.xyzw, 0).xyz;
-    r11.w = saturate(max(CubemapBoxExtData[u_r13.w].fMinAO, r2.x));
+    r11.w = saturate(max(CubemapBoxExtData[i_r13.w].fMinAO, r2.x));
     r19.xyz = r11.www * r19.xyz;
     r19.xyz = max(float3(1.99999999e-006,1.99999999e-006,1.99999999e-006), r19.xyz);
-    r11.w = r11.w * CubemapBoxExtData[u_r13.w].fLSAOSpecAmount + 1;
-    r11.w = saturate(-CubemapBoxExtData[u_r13.w].fLSAOSpecAmount + r11.w);
+    r11.w = r11.w * CubemapBoxExtData[i_r13.w].fLSAOSpecAmount + 1;
+    r11.w = saturate(-CubemapBoxExtData[i_r13.w].fLSAOSpecAmount + r11.w);
     r19.xyz = r19.xyz + r20.xyz;
     r18.xyz = r18.xyz * r11.www;
     r18.xyz = r18.xyz * r8.xyz;
@@ -417,10 +424,16 @@ u_r7.w = lightClustersRead.Load(u_r4.z).x;
     r8.w = (int)r8.w + 1;
     r9.w = r12.w;
   }
-  if (6 == 0) r1.x = 0; else if (6+18 < 32) {   r1.x = (uint)u_r4.w << (32-(6 + 18)); r1.x = (uint)r1.x >> (32-6);  } else r1.x = (uint)u_r4.w >> 18;
-  if (6 == 0) r1.y = 0; else if (6+12 < 32) {   r1.y = (uint)u_r4.w << (32-(6 + 12)); r1.y = (uint)r1.y >> (32-6);  } else r1.y = (uint)u_r4.w >> 12;
-  if (6 == 0) r1.z = 0; else if (6+6 < 32) {   r1.z = (uint)u_r4.w << (32-(6 + 6)); r1.z = (uint)r1.z >> (32-6);  } else r1.z = (uint)u_r4.w >> 6;
-  r1.x = (int)-r1.y + (int)r1.x;
+  
+// This generates a ubfe instruction. By definition a ubfe instruction 
+// returns an int, as it is a bitfield operation.  
+// Use a int temp variable, and anywhere this var is used, until redefined.
+int4 i_r1;
+if (6 == 0) i_r1.x = 0; else if (6+18 < 32) {   i_r1.x = (uint)u_r4.w << (32-(6 + 18)); i_r1.x = (uint)i_r1.x >> (32-6);  } else i_r1.x = (uint)u_r4.w >> 18;
+if (6 == 0) i_r1.y = 0; else if (6+12 < 32) {   i_r1.y = (uint)u_r4.w << (32-(6 + 12)); i_r1.y = (uint)i_r1.y >> (32-6);  } else i_r1.y = (uint)u_r4.w >> 12;
+if (6 == 0) i_r1.z = 0; else if (6+6 < 32) {   i_r1.z = (uint)u_r4.w << (32-(6 + 6)); i_r1.z = (uint)i_r1.z >> (32-6);  } else i_r1.z = (uint)u_r4.w >> 6;
+i_r1.x = (int)-i_r1.y + (int)i_r1.x;
+  
   r2.x = lightClustersRead.Load(r4.y).x;
   r4.xz = -r5.ww * float2(0.699999988,0.99000001) + float2(1,1);
   r3.y = r4.x * r4.x;
@@ -447,7 +460,7 @@ u_r7.w = lightClustersRead.Load(u_r4.z).x;
   r6.w = 0;
   u_r7.w = r2.x;
   while (true) {
-    r9.w = cmp((uint)r6.w >= (uint)r1.x);
+    r9.w = cmp((uint)r6.w >= (uint)i_r1.x);
     if (r9.w != 0) break;
     r5.w = (int)r5.w + 1;
     r9.w = lightClustersRead.Load(r5.w).x;
@@ -462,11 +475,18 @@ u_r7.w = lightClustersRead.Load(u_r4.z).x;
 r12.w = -PointLightExtData[u_r7.w].fBulbRadius + r11.w;
 
     r12.w = max(9.99999997e-007, r12.w);
-    if (8 == 0) r13.x = 0; else if (8+16 < 32) {     r13.x = (uint)PointLightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r13.x = (uint)r13.x >> (32-8);    } else r13.x = (uint)PointLightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
+	
+// This generates a ubfe instruction. By definition a ubfe instruction 
+// returns an int, as it is a bitfield operation.  
+// Use an int temp variable, and anywhere this var is used, until redefined.
+int4 i_r13;
+if (8 == 0) i_r13.x = 0; else if (8+16 < 32) {     i_r13.x = (uint)PointLightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); i_r13.x = (uint)i_r13.x >> (32-8);    } else i_r13.x = (uint)PointLightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
+
     r13.y = 255 & (int)PointLightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex;
-    r13.x = (int)r0_w & (int)r13.x;
-    r13.x = cmp((int)r13.y == (int)r13.x);
-    r13.x = r13.x ? 1.000000 : 0;
+    i_r13.x = (int)r0_w & (int)i_r13.x;
+    i_r13.x = cmp((int)r13.y == (int)i_r13.x);
+	
+    i_r13.x = i_r13.x ? 1.000000 : 0;
     r12.w = r12.w * r12.w + 9.99999997e-007;
     r12.w = 1 / r12.w;
     r13.y = PointLightExtData[u_r7.w].fRadialFalloff * PointLightPositions[u_r7.w].w;
@@ -477,7 +497,9 @@ r12.w = -PointLightExtData[u_r7.w].fBulbRadius + r11.w;
     r11.w = r11.w * r11.w;
     r11.w = r13.y * r11.w;
     r11.w = r12.w * r11.w;
-    r13.xyz = PointLightColors[u_r7.w].vColor.xyz * r13.xxx;
+	
+// Here converted to float.
+    r13.xyz = PointLightColors[u_r7.w].vColor.xyz * i_r13.xxx;
     r13.xyz = r13.xyz * r11.www;
     r11.w = dot(r8.xyzw, r10.xyzw);
     r11.w = saturate(Light_SSDOParams.x * r11.w);
@@ -536,7 +558,7 @@ r12.w = -PointLightExtData[u_r7.w].fBulbRadius + r11.w;
   r4.y = 0;
   r6.w = r1.x;
   while (true) {
-    u_r7.w = cmp((uint)r4.y >= (uint)r1.y);
+    u_r7.w = cmp((uint)r4.y >= (uint)i_r1.y);
     if (u_r7.w != 0) break;
     r2.x = (int)r2.x + 1;
     u_r7.w = lightClustersRead.Load(r2.x).x;
@@ -638,12 +660,17 @@ r12.w = dot(PointLightShadowData[r9.w/4].mShadowMat._m30_m31_m32_m33, r14.xyzw);
 r12.w = -PointLightExtData[r6.w].fBulbRadius + r11.w;
 
     r12.w = max(9.99999997e-007, r12.w);
-    if (8 == 0) r13.w = 0; else if (8+16 < 32) {     r13.w = (uint)PointLightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r13.w = (uint)r13.w >> (32-8);    } else r13.w = (uint)PointLightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
+
+// This generates a ubfe instruction. By definition a ubfe instruction 
+// returns an int, as it is a bitfield operation.  
+// Use an int temp variable, and anywhere this var is used, until redefined.
+if (8 == 0) i_r13.w = 0; else if (8+16 < 32) {     i_r13.w = (uint)PointLightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); i_r13.w = (uint)i_r13.w >> (32-8);    } else i_r13.w = (uint)PointLightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
+
     r15.w = 255 & (int)PointLightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex;
-    r13.w = (int)r0_w & (int)r13.w;
-    r13.w = cmp((int)r15.w == (int)r13.w);
-    r13.w = r13.w ? 1.000000 : 0;
-    r9.w = r13.w * r9.w;
+    i_r13.w = (int)r0_w & (int)i_r13.w;
+    i_r13.w = cmp((int)r15.w == (int)i_r13.w);
+    i_r13.w = i_r13.w ? 1.000000 : 0;
+    r9.w = i_r13.w * r9.w;
     r12.w = r12.w * r12.w + 9.99999997e-007;
     r12.w = 1 / r12.w;
     r13.w = PointLightExtData[r6.w].fRadialFalloff * PointLightPositions[r6.w].w;
@@ -704,26 +731,35 @@ r12.w = -PointLightExtData[r6.w].fBulbRadius + r11.w;
     r4.y = (int)r4.y + 1;
     r6.w = u_r7.w;
   }
-  r1.x = (int)u_r4.w & 63;
-  r1.y = (int)-r1.x + (int)r1.z;
-  r1.z = lightClustersRead.Load(r2.x).x;
+  i_r1.x = (int)u_r4.w & 63;
+  i_r1.y = (int)-i_r1.x + (int)i_r1.z;
+
+uint4 u_r1;  
+u_r1.z = lightClustersRead.Load(r2.x).x;
+
   r14.w = 1;
   r8.w = 0.282090008;
   r9.xyz = r13.xyz;
   r12.xyz = r15.xyz;
   r4.y = r2.x;
   u_r4.w = 0;
-  r5.w = r1.z;
+  r5.w = u_r1.z;
   while (true) {
-    r6.w = cmp((uint)u_r4.w >= (uint)r1.y);
+    r6.w = cmp((uint)u_r4.w >= (uint)i_r1.y);
     if (r6.w != 0) break;
     r4.yw = (int)r4.yw + int2(1,1);
     r6.w = lightClustersRead.Load(r4.y).x;
     u_r7.w = (int)r5.w * 6;
-    if (8 == 0) r16.x = 0; else if (8+16 < 32) {     r16.x = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r16.x = (uint)r16.x >> (32-8);    } else r16.x = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
-    if (8 == 0) r16.y = 0; else if (8+8 < 32) {     r16.y = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 8)); r16.y = (uint)r16.y >> (32-8);    } else r16.y = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 8;
+	
+// This generates a ubfe instruction. By definition a ubfe instruction 
+// returns a uint, as it is a bitfield operation.  
+// Use a uint temp variable, and anywhere this var is used, until redefined.
+uint4 i_r16;
+if (8 == 0) i_r16.x = 0; else if (8+16 < 32) {     i_r16.x = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); i_r16.x = (uint)i_r16.x >> (32-8);    } else i_r16.x = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
+if (8 == 0) i_r16.y = 0; else if (8+8 < 32) {     i_r16.y = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 8)); i_r16.y = (uint)i_r16.y >> (32-8);    } else i_r16.y = (uint)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex >> 8;
+	
     r9.w = 255 & (int)SpotlightExtData[u_r7.w].nFlagsAndVisIDAndTiledPoolIndex;
-    r11.w = (int)r0_w & (int)r16.x;
+    r11.w = (int)r0_w & (int)i_r16.x;
     r9.w = cmp((int)r9.w == (int)r11.w);
     r9.w = r9.w ? 1.000000 : 0;
 	
@@ -743,7 +779,7 @@ r12.w = dot(SpotlightExtData[u_r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r12.w = max(9.99999975e-006, r12.w);
     r16.xz = r17.xy / r12.ww;
     r17.xy = r16.xz * float2(0.5,0.5) + float2(0.5,0.5);
-    r17.z = (uint)r16.y;
+    r17.z = (uint)i_r16.y;
     r16.xyz = MyProjectorPool.SampleLevel(LinearClampSampler_s, r17.xyz, 0).xyz;
     r16.xyz = SpotlightColors[r5.w].xyz * r16.xyz;
     r11.w = cmp(-0.00200000009 < r11.w);
@@ -817,19 +853,19 @@ r12.w = dot(SpotlightExtData[u_r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r12.xyz = r8.xyz * r7.www + r12.xyz;
     r5.w = r6.w;
   }
-  r1.y = lightClustersRead.Load(r4.y).x;
+  u_r1.y = lightClustersRead.Load(r4.y).x;
   r14.w = 1;
   r8.w = 0.282090008;
   r13.xyz = r9.xyz;
   r15.xyz = r12.xyz;
-  r1.z = r4.y;
+  u_r1.z = r4.y;
   r2.x = 0;
-  u_r4.w = r1.y;
+  u_r4.w = u_r1.y;
   while (true) {
-    r5.w = cmp((uint)r2.x >= (uint)r1.x);
+    r5.w = cmp((uint)r2.x >= (uint)i_r1.x);
     if (r5.w != 0) break;
-    r1.z = (int)r1.z + 1;
-    r5.w = lightClustersRead.Load(r1.z).x;
+    u_r1.z = (int)u_r1.z + 1;
+    r5.w = lightClustersRead.Load(u_r1.z).x;
     r6.w = (int)u_r4.w * 6;
 	
 // New use of r7.w as an index to array, clearly a uint.
@@ -852,13 +888,19 @@ r11.w = dot(SpotlightExtData[r6.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
 	r11.w = max(9.99999975e-006, r11.w);
     r16.xy = r16.xy / r11.ww;
     r16.xy = r16.xy * float2(0.5,0.5) + float2(0.5,0.5);
-    if (8 == 0) r17.x = 0; else if (8+16 < 32) {     r17.x = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); r17.x = (uint)r17.x >> (32-8);    } else r17.x = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
-    if (8 == 0) r17.y = 0; else if (8+8 < 32) {     r17.y = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 8)); r17.y = (uint)r17.y >> (32-8);    } else r17.y = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 8;
+
+// This generates a ubfe instruction. By definition a ubfe instruction 
+// returns an int, as it is a bitfield operation.  
+// Use an int temp variable, and anywhere this var is used, until redefined.
+int4 i_r17;
+if (8 == 0) i_r17.x = 0; else if (8+16 < 32) {     i_r17.x = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); i_r17.x = (uint)i_r17.x >> (32-8);    } else i_r17.x = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
+if (8 == 0) i_r17.y = 0; else if (8+8 < 32) {     i_r17.y = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 8)); i_r17.y = (uint)i_r17.y >> (32-8);    } else i_r17.y = (uint)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 8;
+
     r11.w = 255 & (int)SpotlightExtData[r6.w].nFlagsAndVisIDAndTiledPoolIndex;
-    r12.w = (int)r0_w & (int)r17.x;
+    r12.w = (int)r0_w & (int)i_r17.x;
     r11.w = cmp((int)r11.w == (int)r12.w);
     r11.w = r11.w ? 1.000000 : 0;
-    r16.z = (uint)r17.y;
+    r16.z = (uint)i_r17.y;
     r17.xyz = MyProjectorPool.SampleLevel(LinearClampSampler_s, r16.xyz, 0).xyz;
     r17.xyz = SpotlightColors[u_r4.w].xyz * r17.xyz;
     r12.w = cmp(-0.00200000009 < r9.w);
