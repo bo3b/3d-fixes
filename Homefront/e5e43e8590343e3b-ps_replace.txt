@@ -949,7 +949,9 @@ r12.w = dot(SpotlightExtData[u_r7.w].mProj._m30_m31_m32_m33, r14.xyzw);
     if (u_r5.w != 0) break;
     u_r1.z = (int)u_r1.z + 1;
     u_r5.w = lightClustersRead.Load(u_r1.z).x;
-    u_r6.w = (int)u_r4.w * 6;
+	
+// Continue with commenting out multiply, so that fxc can generate this line.
+    u_r6.w = (int)u_r4.w; // * 6;
 	
 // New use of r7.w as an index to array, clearly a uint.
 // Reuse the above u_r7 temp variable.	
@@ -963,10 +965,10 @@ r12.w = dot(SpotlightExtData[u_r7.w].mProj._m30_m31_m32_m33, r14.xyzw);
 // dp4 r16.y, cb7[r6.w + 770].xyzw, r14.xyzw
 // dp4 r9.w, cb7[r6.w + 771].xyzw, r14.xyzw
 // dp4 r11.w, cb7[r6.w + 772].xyzw, r14.xyzw
-r16.x = dot(SpotlightExtData[u_r6.w/4].mProj._m00_m01_m02_m03, r14.xyzw);
-r16.y = dot(SpotlightExtData[u_r6.w/4].mProj._m10_m11_m12_m13, r14.xyzw);
-r9.w = dot(SpotlightExtData[u_r6.w/4].mProj._m20_m21_m22_m23, r14.xyzw);
-r11.w = dot(SpotlightExtData[u_r6.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
+r16.x = dot(SpotlightExtData[u_r6.w].mProj._m00_m01_m02_m03, r14.xyzw);
+r16.y = dot(SpotlightExtData[u_r6.w].mProj._m10_m11_m12_m13, r14.xyzw);
+r9.w = dot(SpotlightExtData[u_r6.w].mProj._m20_m21_m22_m23, r14.xyzw);
+r11.w = dot(SpotlightExtData[u_r6.w].mProj._m30_m31_m32_m33, r14.xyzw);
     
 	r11.w = max(9.99999975e-006, r11.w);
     r16.xy = r16.xy / r11.ww;
@@ -979,10 +981,12 @@ int4 i_r17;
 if (8 == 0) i_r17.x = 0; else if (8+16 < 32) {     i_r17.x = (uint)SpotlightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); i_r17.x = (uint)i_r17.x >> (32-8);    } else i_r17.x = (uint)SpotlightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
 if (8 == 0) i_r17.y = 0; else if (8+8 < 32) {     i_r17.y = (uint)SpotlightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 8)); i_r17.y = (uint)i_r17.y >> (32-8);    } else i_r17.y = (uint)SpotlightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 8;
 
-    r11.w = 255 & (int)SpotlightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex;
+uint4 u_r11;
+    u_r11.w = 255 & (int)SpotlightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex;
     r12.w = (int)r0_w & (int)i_r17.x;
-    r11.w = cmp((int)r11.w == (int)r12.w);
-    r11.w = r11.w ? 1.000000 : 0;
+    u_r11.w = cmp((int)u_r11.w == (int)r12.w);
+    r11.w = u_r11.w ? 1.000000 : 0;
+	
     r16.z = (uint)i_r17.y;
     r17.xyz = MyProjectorPool.SampleLevel(LinearClampSampler_s, r16.xyz, 0).xyz;
     r17.xyz = SpotlightColors[u_r4.w].xyz * r17.xyz;
