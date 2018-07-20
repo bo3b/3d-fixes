@@ -405,7 +405,8 @@ if (8 == 0) i_r16.w = 0; else if (8+8 < 32) {     i_r16.w = (uint)CubemapBoxExtD
     i_r16.w = i_r16.w ? 1.000000 : 0;
     r15.w = i_r16.w * r15.w;
     r15.w = CubemapBoxExtData[u_r13.w].fCubemapContrib * r15.w;
-    i_r16.w = (int)CubemapBoxExtData[u_r13.w].nFlagsAndVisID >> 16;
+	
+    i_r16.w = (uint)CubemapBoxExtData[u_r13.w].nFlagsAndVisID >> 16;
     i_r16.w = (int)i_r16.w & 2;
 
     r18.xyz = CubemapBoxExtData[u_r13.w].vProjectionParams.xyz + CubemapBoxPositions[u_r9.w].xyz;
@@ -466,7 +467,7 @@ if (6 == 0) i_r1.y = 0; else if (6+12 < 32) {   i_r1.y = (uint)u_r4.w << (32-(6 
 if (6 == 0) i_r1.z = 0; else if (6+6 < 32) {   i_r1.z = (uint)u_r4.w << (32-(6 + 6)); i_r1.z = (uint)i_r1.z >> (32-6);  } else i_r1.z = (uint)u_r4.w >> 6;
 i_r1.x = (int)-i_r1.y + (int)i_r1.x;
   
-  r2.x = lightClustersRead.Load(r4.y).x;
+  r2.x = lightClustersRead.Load(u_r4.y).x;
   r4.xz = -r5.ww * float2(0.699999988,0.99000001) + float2(1,1);
   r3.y = r4.x * r4.x;
   r4.x = r3.y * r3.y;
@@ -488,15 +489,19 @@ i_r1.x = (int)-i_r1.y + (int)i_r1.x;
   r8.w = 0.282090008;
   r9.xyz = r16.xyz;
   r12.xyz = r17.xyz;
-  r5.w = r4.y;
+  
+// Used as index, make it uint.
+uint4 u_r5;
+u_r5.w = u_r4.y;
+
   u_r6.w = 0;
   u_r7.w = r2.x;
   while (true) {
     r9.w = cmp((uint)u_r6.w >= (uint)i_r1.x);
     if (r9.w != 0) break;
 	
-    r5.w = (int)r5.w + 1;
-    r9.w = lightClustersRead.Load(r5.w).x;
+    u_r5.w = (int)u_r5.w + 1;
+    r9.w = lightClustersRead.Load(u_r5.w).x;
     r13.xyz = -v2.xyz * r2.zzz + PointLightPositions[u_r7.w].xyz;
     r11.w = dot(r13.xyz, r13.xyz);
     r11.w = sqrt(r11.w);
@@ -582,16 +587,16 @@ if (8 == 0) i_r13.x = 0; else if (8+16 < 32) {     i_r13.x = (uint)PointLightExt
     u_r6.w = (int)u_r6.w + 1;
     u_r7.w = r9.w;
   }
-  r1.x = lightClustersRead.Load(r5.w).x;
+  r1.x = lightClustersRead.Load(u_r5.w).x;
   r14.w = 1;
   r8.w = 0.282090008;
   r13.xyz = r9.xyz;
   r15.xyz = r12.xyz;
-  r2.x = r5.w;
-  r4.y = 0;
+  r2.x = u_r5.w;
+  u_r4.y = 0;
   u_r6.w = r1.x;
   while (true) {
-    u_r7.w = cmp((uint)r4.y >= (uint)i_r1.y);
+    u_r7.w = cmp((uint)u_r4.y >= (uint)i_r1.y);
     if (u_r7.w != 0) break;
     r2.x = (int)r2.x + 1;
     u_r7.w = lightClustersRead.Load(r2.x).x;
@@ -762,7 +767,7 @@ if (8 == 0) i_r13.w = 0; else if (8+16 < 32) {     i_r13.w = (uint)PointLightExt
     r16.xyz = r11.www * r16.xyz;
     r16.xyz = r16.xyz * r18.xyz;
     r15.xyz = r16.xyz * r8.xxx + r15.xyz;
-    r4.y = (int)r4.y + 1;
+    u_r4.y = (int)u_r4.y + 1;
     u_r6.w = u_r7.w;
   }
   i_r1.x = (int)u_r4.w & 63;
@@ -775,15 +780,15 @@ u_r1.z = lightClustersRead.Load(r2.x).x;
   r8.w = 0.282090008;
   r9.xyz = r13.xyz;
   r12.xyz = r15.xyz;
-  r4.y = r2.x;
+  u_r4.y = r2.x;
   u_r4.w = 0;
-  r5.w = u_r1.z;
+  u_r5.w = u_r1.z;
   while (true) {
     u_r6.w = cmp((uint)u_r4.w >= (uint)i_r1.y);
     if (u_r6.w != 0) break;
-    r4.yw = (int)r4.yw + int2(1,1);
-    u_r6.w = lightClustersRead.Load(r4.y).x;
-    u_r7.w = (int)r5.w * 6;
+    u_r4.yw = (int)u_r4.yw + int2(1,1);
+    u_r6.w = lightClustersRead.Load(u_r4.y).x;
+    u_r7.w = (int)u_r5.w * 6;
 	
 // This generates a ubfe instruction. By definition a ubfe instruction 
 // returns a uint, as it is a bitfield operation.  
@@ -815,11 +820,11 @@ r12.w = dot(SpotlightExtData[u_r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r17.xy = r16.xz * float2(0.5,0.5) + float2(0.5,0.5);
     r17.z = (uint)i_r16.y;
     r16.xyz = MyProjectorPool.SampleLevel(LinearClampSampler_s, r17.xyz, 0).xyz;
-    r16.xyz = SpotlightColors[r5.w].xyz * r16.xyz;
+    r16.xyz = SpotlightColors[u_r5.w].xyz * r16.xyz;
     r11.w = cmp(-0.00200000009 < r11.w);
     r11.w = r11.w ? 1.000000 : 0;
     r16.xyz = r16.xyz * r11.www;
-    r11.w = (uint)r5.w << 1;
+    r11.w = (uint)u_r5.w << 1;
     r17.xyz = -v2.xyz * r2.zzz + SpotlightPositions[r11.w].xyz;
     r12.w = dot(r17.xyz, r17.xyz);
     r12.w = sqrt(r12.w);
@@ -885,21 +890,21 @@ r12.w = dot(SpotlightExtData[u_r7.w/4].mProj._m30_m31_m32_m33, r14.xyzw);
     r8.xyz = r9.www * r16.xyz;
     r8.xyz = r8.xyz * r18.xyz;
     r12.xyz = r8.xyz * r7.www + r12.xyz;
-    r5.w = u_r6.w;
+    u_r5.w = u_r6.w;
   }
-  u_r1.y = lightClustersRead.Load(r4.y).x;
+  u_r1.y = lightClustersRead.Load(u_r4.y).x;
   r14.w = 1;
   r8.w = 0.282090008;
   r13.xyz = r9.xyz;
   r15.xyz = r12.xyz;
-  u_r1.z = r4.y;
+  u_r1.z = u_r4.y;
   r2.x = 0;
   u_r4.w = u_r1.y;
   while (true) {
-    r5.w = cmp((uint)r2.x >= (uint)i_r1.x);
-    if (r5.w != 0) break;
+    u_r5.w = cmp((uint)r2.x >= (uint)i_r1.x);
+    if (u_r5.w != 0) break;
     u_r1.z = (int)u_r1.z + 1;
-    r5.w = lightClustersRead.Load(u_r1.z).x;
+    u_r5.w = lightClustersRead.Load(u_r1.z).x;
     u_r6.w = (int)u_r4.w * 6;
 	
 // New use of r7.w as an index to array, clearly a uint.
@@ -1070,7 +1075,7 @@ if (8 == 0) i_r17.y = 0; else if (8+8 < 32) {     i_r17.y = (uint)SpotlightExtDa
     r8.xyz = r8.xyz * r18.xyz;
     r15.xyz = r8.xyz * r6.www + r15.xyz;
     r2.x = (int)r2.x + 1;
-    u_r4.w = r5.w;
+    u_r4.w = u_r5.w;
   }
   o0.xyz = r13.xyz;
   o1.xyz = r15.xyz * r2.yyy;
