@@ -403,11 +403,13 @@ r19.z = dot(CubemapBoxExtData[u_r13.w].vFadeParams[2].xyz, r18.xyz);
 int4 i_r16;
 if (8 == 0) i_r16.w = 0; else if (8+8 < 32) {     i_r16.w = (uint)CubemapBoxExtData[u_r13.w].nFlagsAndVisID << (32-(8 + 8)); i_r16.w = (uint)i_r16.w >> (32-8);    } else i_r16.w = (uint)CubemapBoxExtData[u_r13.w].nFlagsAndVisID >> 8;
 
-    r17.w = 255 & (int)CubemapBoxExtData[u_r13.w].nFlagsAndVisID;
+int4 i_r17;
+    i_r17.w = 255 & (int)CubemapBoxExtData[u_r13.w].nFlagsAndVisID;
     i_r16.w = (int)r0_w & (int)i_r16.w;
-    i_r16.w = cmp((int)r17.w == (int)i_r16.w);
-    i_r16.w = i_r16.w ? 1.000000 : 0;
-    r15.w = i_r16.w * r15.w;
+    i_r16.w = cmp((int)i_r17.w == (int)i_r16.w);
+	
+    r16.w = i_r16.w ? 1.000000 : 0;
+    r15.w = r16.w * r15.w;
     r15.w = CubemapBoxExtData[u_r13.w].fCubemapContrib * r15.w;
 	
     i_r16.w = (uint)CubemapBoxExtData[u_r13.w].nFlagsAndVisID >> 16;
@@ -536,7 +538,7 @@ if (8 == 0) i_r13.x = 0; else if (8+16 < 32) {     i_r13.x = (uint)PointLightExt
     i_r13.x = (int)r0_w & (int)i_r13.x;
     i_r13.x = cmp((int)i_r13.y == (int)i_r13.x);
 	
-    i_r13.x = i_r13.x ? 1.000000 : 0;
+    r13.x = i_r13.x ? 1.000000 : 0;
     r12.w = r12.w * r12.w + 9.99999997e-007;
     r12.w = 1 / r12.w;
     r13.y = PointLightExtData[u_r7.w].fRadialFalloff * PointLightPositions[u_r7.w].w;
@@ -549,7 +551,7 @@ if (8 == 0) i_r13.x = 0; else if (8+16 < 32) {     i_r13.x = (uint)PointLightExt
     r11.w = r12.w * r11.w;
 	
 // Here converted to float.
-    r13.xyz = PointLightColors[u_r7.w].vColor.xyz * i_r13.xxx;
+    r13.xyz = PointLightColors[u_r7.w].vColor.xyz * r13.xxx;
     r13.xyz = r13.xyz * r11.www;
     r11.w = dot(r8.xyzw, r10.xyzw);
     r11.w = saturate(Light_SSDOParams.x * r11.w);
@@ -741,11 +743,13 @@ r12.w = -PointLightExtData[u_r6.w].fBulbRadius + r11.w;
 int4 i_r13;
 if (8 == 0) i_r13.w = 0; else if (8+16 < 32) {     i_r13.w = (uint)PointLightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex << (32-(8 + 16)); i_r13.w = (uint)i_r13.w >> (32-8);    } else i_r13.w = (uint)PointLightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex >> 16;
 
-    r15.w = 255 & (int)PointLightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex;
+int4 i_r15;
+    i_r15.w = 255 & (int)PointLightExtData[u_r6.w].nFlagsAndVisIDAndTiledPoolIndex;
     i_r13.w = (int)r0_w & (int)i_r13.w;
-    i_r13.w = cmp((int)r15.w == (int)i_r13.w);
-    i_r13.w = i_r13.w ? 1.000000 : 0;
-    r9.w = i_r13.w * r9.w;
+    i_r13.w = cmp((int)i_r15.w == (int)i_r13.w);
+	
+    r13.w = i_r13.w ? 1.000000 : 0;
+    r9.w = r13.w * r9.w;
     r12.w = r12.w * r12.w + 9.99999997e-007;
     r12.w = 1 / r12.w;
     r13.w = PointLightExtData[u_r6.w].fRadialFalloff * PointLightPositions[u_r6.w].w;
@@ -842,7 +846,7 @@ uint4 u_r9;
 uint4 u_r11;
     u_r11.w = (int)r0_w & (int)i_r16.x;
     u_r9.w = cmp((int)u_r9.w == (int)u_r11.w);
-    u_r9.w = u_r9.w ? 1.000000 : 0;
+    r9.w = u_r9.w ? 1.000000 : 0;
 	
 // r17.x = dot(SpotlightExtData[r7.w/4]._m00_m01_m02_m03, r14.xyzw);
 // r17.y = dot(SpotlightExtData[r7.w/4]._m10_m11_m12_m13, r14.xyzw);
@@ -885,7 +889,7 @@ r12.w = dot(SpotlightExtData[u_r7.w].mProj._m30_m31_m32_m33, r14.xyzw);
     r7.w = r7.w * r7.w;
     r7.w = r11.w * r7.w;
     r7.w = r13.w * r7.w;
-    r16.xyz = r16.xyz * u_r9.www;
+    r16.xyz = r16.xyz * r9.www;
     r16.xyz = r16.xyz * r7.www;
     r7.w = dot(r8.xyzw, r10.xyzw);
     r7.w = saturate(Light_SSDOParams.x * r7.w);
