@@ -179,6 +179,7 @@ void main(
   r2.x = saturate(r3.y * 2.40785336 + -0.119028516);
   r0.xyz = float3(6,6,6) * r0.xyz;
   r0.xyz = min(float3(1,1,1), r0.xyz);
+  
   r0.xyz = r0.xyz + -r3.yyy;
   r0.xyz = r2.xxx * r0.xyz + r3.yyy;
   r2.x = deferredAO.SampleLevel(PointClampSampler_s, v1.xy, 0).x;
@@ -269,6 +270,7 @@ void main(
   r1.xyz = r13.xyz * r1.xyz;
   r5.xyz = r5.xyz * r8.xyz;
   r5.xyz = r5.xyz * r3.yyy;
+	
   r4.zw = vClusterGridSize.xy * v1.xy;
   r4.zw = trunc(r4.zw);
   r4.zw = min(vDownscaleParams.xy, r4.zw);
@@ -276,9 +278,8 @@ void main(
 // Convert r13 to i_r13 to avoid float conversions
 // ftoi r13.xy, r4.zwzz
 int4 i_r13;  
-i_r13.xy = (int)r4.zw;
+i_r13.xy = r4.zw;
 i_r13.w = 0;
-
 
 // ----------- Return check --------------
   r4.z = DepthBufferMax.Load(i_r13.xyw).x;
@@ -463,7 +464,7 @@ int4 i_r17;
     u_r8.w = (int)u_r8.w + 1;
     u_r9.w = u_r12.w;
   }
-  
+
 // This generates a ubfe instruction. By definition a ubfe instruction 
 // returns an int, as it is a bitfield operation.  
 // Use a int temp variable, and anywhere this var is used, until redefined.
@@ -601,7 +602,7 @@ if (8 == 0) i_r13.x = 0; else if (8+16 < 32) {     i_r13.x = (uint)PointLightExt
     u_r6.w = (int)u_r6.w + 1;
     u_r7.w = u_r9.w;
   }
-  
+
 // Always returns uint here, so make temp match.
 uint4 u_r1;
   u_r1.x = lightClustersRead.Load(u_r5.w).x;
@@ -810,6 +811,7 @@ int4 i_r15;
     u_r4.y = (int)u_r4.y + 1;
     u_r6.w = u_r7.w;
   }
+
   i_r1.x = (int)u_r4.w & 63;
   i_r1.y = (int)-i_r1.x + (int)i_r1.z;
 
@@ -827,7 +829,7 @@ u_r1.z = lightClustersRead.Load(u_r2.x).x;
   while (true) {
     u_r6.w = cmp((uint)u_r4.w >= (uint)i_r1.y);
     if (u_r6.w != 0) break;
-    u_r4.yw = (int)u_r4.yw + int2(1,1);
+    u_r4.yw = u_r4.yw + int2(1,1);
     u_r6.w = lightClustersRead.Load(u_r4.y).x;
 
 // Another array index calculation.  Killing this
@@ -938,6 +940,7 @@ r12.w = dot(SpotlightExtData[u_r7.w].mProj._m30_m31_m32_m33, r14.xyzw);
     r12.xyz = r8.xyz * r7.www + r12.xyz;
     u_r5.w = u_r6.w;
   }
+
   u_r1.y = lightClustersRead.Load(u_r4.y).x;
   r14.w = 1;
   r8.w = 0.282090008;
@@ -1129,6 +1132,7 @@ uint4 u_r11;
     u_r2.x = (int)u_r2.x + 1;
     u_r4.w = u_r5.w;
   }
+
   o0.xyz = r13.xyz;
   o1.xyz = r15.xyz * r2.yyy;
   o0.w = 1;
