@@ -71,49 +71,68 @@ void main(
   r0.w = dot(r0.xyz, -DecalCB_vCameraFront.xyz);
   r1.x = DecalCB_vCameraPos.w * v0.x;
   r1.y = DecalCB_vCameraFront.w * v0.y;
+	
   r1.z = _tex0.Sample(_tex0_s, r1.xy).x;
   r1.xyw = _tex5.SampleLevel(_tex5_s, r1.xy, 0).xyz;
-  r1.xyw = r1.xyw * float3(2,2,2) + float3(-1,-1,-1);
+  
+	r1.xyw = r1.xyw * float3(2,2,2) + float3(-1,-1,-1);
   r1.z = -DecalCB_vMisc.x + r1.z;
   r1.z = DecalCB_vMisc.y / r1.z;
   r0.w = r1.z / r0.w;
   r0.xyz = r0.www * r0.xyz + DecalCB_vCameraPos.xyz;
-  r0.w = (int)DecalCBIndex.x * 9;
-  r2.x = -DecalCBs[r0.w].vDecalTS[0].w;
-  r2.y = -DecalCBs[r0.w].vDecalTS[1].w;
-  r2.z = -DecalCBs[r0.w].vDecalTS[2].w;
+	
+uint4 u_r0;	
+// r0.w = (int)DecalCBIndex.x * 9;
+u_r0.w = DecalCBIndex.x; // * 9;
+
+  r2.x = -DecalCBs[u_r0.w].vDecalTS[0].w;
+  r2.y = -DecalCBs[u_r0.w].vDecalTS[1].w;
+  r2.z = -DecalCBs[u_r0.w].vDecalTS[2].w;
   r0.xyz = r2.xyz + r0.xyz;
-  r2.x = dot(DecalCBs[r0.w].vDecalTS[0].xyz, r0.xyz);
-  r2.y = dot(-DecalCBs[r0.w].vDecalTS[1].xyz, r0.xyz);
-  r2.z = dot(DecalCBs[r0.w].vDecalTS[2].xyz, r0.xyz);
-  r0.xyz = r2.xyz / DecalCBs[r0.w].vDecalTS[3].xyz;
+  r2.x = dot(DecalCBs[u_r0.w].vDecalTS[0].xyz, r0.xyz);
+  r2.y = dot(-DecalCBs[u_r0.w].vDecalTS[1].xyz, r0.xyz);
+  r2.z = dot(DecalCBs[u_r0.w].vDecalTS[2].xyz, r0.xyz);
+  r0.xyz = r2.xyz / DecalCBs[u_r0.w].vDecalTS[3].xyz;
   r0.xyz = r0.xyz * float3(0.5,0.5,1.25) + float3(0.5,0.5,0.625);
   r2.xyzw = r0.xyxy * float4(1,1,-1,-1) + float4(0,0,1,1);
   r2.xyzw = cmp(r2.xyzw < float4(0,0,0,0));
   r2.xy = (int2)r2.zw | (int2)r2.xy;
-  r1.z = (int)r2.y | (int)r2.x;
-  if (r1.z != 0) discard;
+
+int4 i_r1;
+  i_r1.z = (int)r2.y | (int)r2.x;
+	
+  if (i_r1.z != 0) discard;
   r2.xy = float2(1,0.800000012) + -r0.zz;
-  r0.xy = r0.xy * DecalCBs[r0.w].vTexRect.zw + DecalCBs[r0.w].vTexRect.xy;
+  r0.xy = r0.xy * DecalCBs[u_r0.w].vTexRect.zw + DecalCBs[u_r0.w].vTexRect.xy;
   r2.zw = r2.xx * float2(1,-1) + float2(0,1);
   r2.zw = cmp(r2.zw < float2(0,0));
-  r0.z = (int)r2.w | (int)r2.z;
-  if (r0.z != 0) discard;
+	
+int4 i_r0;
+  i_r0.z = (int)r2.w | (int)r2.z;
+  if (i_r0.z != 0) discard;
+
   r2.zw = ddx_coarse(v1.xy);
   r3.xy = ddy_coarse(v1.xy);
-  r0.z = _tex1.SampleGrad(_tex1_s, r0.xy, r2.z, r3.x).x;
-  r3.xyzw = _tex2.SampleGrad(_tex2_s, r0.xy, r2.zwzz, r3.xyxx).xyzw;
-  r1.z = r3.w * r0.z + -DecalCBs[r0.w].vMisc.w;
+	
+// sample_d_indexable(texture2d)(float,float,float,float) r0.z, r0.xyxx, t1.yzxw, s1, r2.zwzz, r3.xyxx
+// r0.z = _tex1.SampleGrad(_tex1_s, r0.xy, r2.z, r3.x).x;
+r0.z = _tex1.SampleGrad(_tex1_s, r0.xy, r2.zw, r3.xy).x;
+	
+// sample_d_indexable(texture2d)(float,float,float,float) r3.xyzw, r0.xyxx, t2.xyzw, s2, r2.zwzz, r3.xyxx
+// r3.xyzw = _tex2.SampleGrad(_tex2_s, r0.xy, r2.zwzz, r3.xyxx).xyzw;
+r3.xyzw = _tex2.SampleGrad(_tex2_s, r0.xy, r2.zw, r3.xy).xyzw;
+ 
+	r1.z = r3.w * r0.z + -DecalCBs[u_r0.w].vMisc.w;
   r3.w = r3.w * r0.z;
-  r3.xyzw = DecalCBs[r0.w].vDiffuse.xyzw * r3.xyzw;
+  r3.xyzw = DecalCBs[u_r0.w].vDiffuse.xyzw * r3.xyzw;
   r0.z = cmp(r1.z < 0);
   if (r0.z != 0) discard;
   r0.z = dot(r1.xyw, r1.xyw);
   r0.z = rsqrt(r0.z);
   r1.xyz = r1.xyw * r0.zzz;
-  r0.z = dot(r1.xyz, DecalCBs[r0.w].vDecalTS[2].xyz);
+  r0.z = dot(r1.xyz, DecalCBs[u_r0.w].vDecalTS[2].xyz);
   r0.z = r0.z * 0.5 + 0.5;
-  r0.z = saturate(r0.z * DecalCBs[r0.w].vMisc.x + -DecalCBs[r0.w].vMisc.y);
+  r0.z = saturate(r0.z * DecalCBs[u_r0.w].vMisc.x + -DecalCBs[u_r0.w].vMisc.y);
   r1.x = cmp(r2.x < 0.200000003);
   r1.x = r1.x ? 5 : 1.20000005;
   r1.x = r2.y * r1.x;
@@ -125,7 +144,7 @@ void main(
   r1.xyz = _tex4.Sample(_tex4_s, r0.xy).xyz;
   r0.xy = _tex3.Sample(_tex3_s, r0.xy).xy;
   r0.xy = r0.yx * float2(2,2) + float2(-1,-1);
-  r2.xyzw = DecalCBs[r0.w].vSpecular.wxyz * r1.zxxx;
+  r2.xyzw = DecalCBs[u_r0.w].vSpecular.wxyz * r1.zxxx;
   o2.y = saturate(r1.y);
   r1.x = dot(r2.yzw, float3(0.333333313,0.333333313,0.333333313));
   o2.x = saturate(r2.x);
@@ -154,12 +173,12 @@ void main(
   r1.xyz = DecalCB_vMisc.zzz * r1.xyz + r1.www;
   r1.xyz = sqrt(r1.xyz);
   o0.xyz = min(float3(1,1,1), r1.xyz);
-  r1.xyz = -DecalCBs[r0.w].vDecalTS[1].xyz * r0.yyy;
-  r1.xyz = r0.xxx * DecalCBs[r0.w].vDecalTS[0].xyz + r1.xyz;
+  r1.xyz = -DecalCBs[u_r0.w].vDecalTS[1].xyz * r0.yyy;
+  r1.xyz = r0.xxx * DecalCBs[u_r0.w].vDecalTS[0].xyz + r1.xyz;
   r0.x = dot(r0.xy, -r0.xy);
   r0.x = saturate(1 + r0.x);
   r0.x = sqrt(r0.x);
-  r0.xyw = r0.xxx * DecalCBs[r0.w].vDecalTS[2].xyz + r1.xyz;
+  r0.xyw = r0.xxx * DecalCBs[u_r0.w].vDecalTS[2].xyz + r1.xyz;
   r1.x = dot(r0.xyw, r0.xyw);
   r1.x = rsqrt(r1.x);
   r0.xyw = r1.xxx * r0.xyw;
