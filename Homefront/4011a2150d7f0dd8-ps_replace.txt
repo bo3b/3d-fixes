@@ -1,0 +1,398 @@
+// Decals PS
+
+cbuffer PER_FRAME : register(b2)
+{
+  float4 g_PS_AlbedoCurve : packoffset(c28);
+}
+
+cbuffer DecalCB_PF : register(b9)
+{
+  row_major float4x4 DecalCB_mViewProj : packoffset(c0);
+  float4 DecalCB_vCameraPos : packoffset(c4);
+  float4 DecalCB_vCameraFront : packoffset(c5);
+  float4 DecalCB_vMisc : packoffset(c6);
+}
+
+cbuffer DecalCB : register(b8)
+{
+
+  struct
+  {
+    float4 vDecalTS[4];
+    float4 vDiffuse;
+    float4 vSpecular;
+    float4 vGradient;
+    float4 vTexRect;
+    float4 vMisc;
+  } DecalCBs[99] : packoffset(c0);
+
+}
+
+cbuffer DecalCBIndirect : register(b11)
+{
+  uint4 DecalCBIndex : packoffset(c0);
+}
+
+SamplerState _tex0_s : register(s0);
+SamplerState _tex1_s : register(s1);
+SamplerState _tex2_s : register(s2);
+SamplerState _tex3_s : register(s3);
+SamplerState _tex4_s : register(s4);
+SamplerState _tex5_s : register(s5);
+Texture2D<float4> _tex0 : register(t0);
+Texture2D<float4> _tex1 : register(t1);
+Texture2D<float4> _tex2 : register(t2);
+Texture2D<float4> _tex3 : register(t3);
+Texture2D<float4> _tex4 : register(t4);
+Texture2D<float4> _tex5 : register(t5);
+
+
+// 3Dmigoto declarations
+#define cmp -
+Texture1D<float4> IniParams : register(t120);
+Texture2D<float4> StereoParams : register(t125);
+
+
+void main(
+  float4 v0 : SV_Position0,
+  float4 v1 : TEXCOORD0,
+  float4 v2 : TEXCOORD1,
+  out float4 o0 : SV_Target0,
+  out float4 o1 : SV_Target1,
+  out float4 o2 : SV_Target2)
+{
+  float4 r0,r1,r2,r3,r4;
+  uint4 bitmask, uiDest;
+  float4 fDest;
+
+  r0.x = dot(v2.xyz, v2.xyz);
+  r0.x = rsqrt(r0.x);
+  r0.xyz = v2.xyz * r0.xxx;
+  r0.w = dot(r0.xyz, -DecalCB_vCameraFront.xyz);
+  r1.x = DecalCB_vCameraPos.w * v0.x;
+  r1.y = DecalCB_vCameraFront.w * v0.y;
+  r1.z = _tex0.Sample(_tex0_s, r1.xy).x;
+  r1.xyw = _tex5.SampleLevel(_tex5_s, r1.xy, 0).xyz;
+  r1.xyw = r1.xyw * float3(2,2,2) + float3(-1,-1,-1);
+  r1.z = -DecalCB_vMisc.x + r1.z;
+  r1.z = DecalCB_vMisc.y / r1.z;
+  r0.w = r1.z / r0.w;
+  r0.xyz = r0.www * r0.xyz + DecalCB_vCameraPos.xyz;
+  r0.w = (int)DecalCBIndex.x * 9;
+  r2.x = -DecalCBs[r0.w].vDecalTS[0].w;
+  r2.y = -DecalCBs[r0.w].vDecalTS[1].w;
+  r2.z = -DecalCBs[r0.w].vDecalTS[2].w;
+  r0.xyz = r2.xyz + r0.xyz;
+  r2.x = dot(DecalCBs[r0.w].vDecalTS[0].xyz, r0.xyz);
+  r2.y = dot(-DecalCBs[r0.w].vDecalTS[1].xyz, r0.xyz);
+  r2.z = dot(DecalCBs[r0.w].vDecalTS[2].xyz, r0.xyz);
+  r0.xyz = r2.xyz / DecalCBs[r0.w].vDecalTS[3].xyz;
+  r0.xyz = r0.xyz * float3(0.5,0.5,1.25) + float3(0.5,0.5,0.625);
+  r2.xyzw = r0.xyxy * float4(1,1,-1,-1) + float4(0,0,1,1);
+  r2.xyzw = cmp(r2.xyzw < float4(0,0,0,0));
+  r2.xy = (int2)r2.zw | (int2)r2.xy;
+  r1.z = (int)r2.y | (int)r2.x;
+  if (r1.z != 0) discard;
+  r2.xy = float2(1,0.800000012) + -r0.zz;
+  r0.xy = r0.xy * DecalCBs[r0.w].vTexRect.zw + DecalCBs[r0.w].vTexRect.xy;
+  r2.zw = r2.xx * float2(1,-1) + float2(0,1);
+  r2.zw = cmp(r2.zw < float2(0,0));
+  r0.z = (int)r2.w | (int)r2.z;
+  if (r0.z != 0) discard;
+  r2.zw = ddx_coarse(v1.xy);
+  r3.xy = ddy_coarse(v1.xy);
+  r0.z = _tex1.SampleGrad(_tex1_s, r0.xy, r2.z, r3.x).x;
+  r3.xyzw = _tex2.SampleGrad(_tex2_s, r0.xy, r2.zwzz, r3.xyxx).xyzw;
+  r1.z = r3.w * r0.z + -DecalCBs[r0.w].vMisc.w;
+  r3.w = r3.w * r0.z;
+  r3.xyzw = DecalCBs[r0.w].vDiffuse.xyzw * r3.xyzw;
+  r0.z = cmp(r1.z < 0);
+  if (r0.z != 0) discard;
+  r0.z = dot(r1.xyw, r1.xyw);
+  r0.z = rsqrt(r0.z);
+  r1.xyz = r1.xyw * r0.zzz;
+  r0.z = dot(r1.xyz, DecalCBs[r0.w].vDecalTS[2].xyz);
+  r0.z = r0.z * 0.5 + 0.5;
+  r0.z = saturate(r0.z * DecalCBs[r0.w].vMisc.x + -DecalCBs[r0.w].vMisc.y);
+  r1.x = cmp(r2.x < 0.200000003);
+  r1.x = r1.x ? 5 : 1.20000005;
+  r1.x = r2.y * r1.x;
+  r1.x = -r1.x * r1.x + 1;
+  r1.x = max(0, r1.x);
+  r0.z = r1.x * r0.z;
+  r0.z = r3.w * r0.z;
+  o0.w = r0.z;
+  r1.xyz = _tex4.Sample(_tex4_s, r0.xy).xyz;
+  r0.xy = _tex3.Sample(_tex3_s, r0.xy).xy;
+  r0.xy = r0.yx * float2(2,2) + float2(-1,-1);
+  r2.xyzw = DecalCBs[r0.w].vSpecular.wxyz * r1.zxxx;
+  o2.y = saturate(r1.y);
+  r1.x = dot(r2.yzw, float3(0.333333313,0.333333313,0.333333313));
+  o2.x = saturate(r2.x);
+  r1.x = saturate(r1.x * 2.40785336 + -0.119028516);
+  r1.yzw = float3(5,5,5) * r3.xyz;
+  r1.yzw = saturate(r1.xxx * r1.yzw + r3.xyz);
+  r2.xyz = -g_PS_AlbedoCurve.yyy + r1.yzw;
+  r2.xyz = float3(1,1,1) + -r2.xyz;
+  r2.xyz = log2(r2.xyz);
+  r3.xy = -g_PS_AlbedoCurve.xz + float2(1,1);
+  r3.xy = r1.xx * r3.xy + g_PS_AlbedoCurve.xz;
+  r2.xyz = r3.yyy * r2.xyz;
+  r2.xyz = exp2(r2.xyz);
+  r2.xyz = float3(1,1,1) + -r2.xyz;
+  r1.x = g_PS_AlbedoCurve.y * r3.x;
+  r2.w = -g_PS_AlbedoCurve.y * r3.x + 1;
+  r3.xyz = r3.xxx * r1.yzw;
+  r1.yzw = cmp(g_PS_AlbedoCurve.yyy >= r1.yzw);
+  r2.xyz = r2.xyz * r2.www + r1.xxx;
+  r4.xyz = r1.yzw ? float3(0,0,0) : float3(1,1,1);
+  r1.xyz = r1.yzw ? float3(1,1,1) : 0;
+  r2.xyz = r4.xyz * r2.xyz;
+  r1.xyz = r3.xyz * r1.xyz + r2.xyz;
+  r1.w = dot(r1.xyz, float3(0.212599993,0.715200007,0.0722000003));
+  r1.xyz = r1.xyz + -r1.www;
+  r1.xyz = DecalCB_vMisc.zzz * r1.xyz + r1.www;
+  r1.xyz = sqrt(r1.xyz);
+  o0.xyz = min(float3(1,1,1), r1.xyz);
+  r1.xyz = -DecalCBs[r0.w].vDecalTS[1].xyz * r0.yyy;
+  r1.xyz = r0.xxx * DecalCBs[r0.w].vDecalTS[0].xyz + r1.xyz;
+  r0.x = dot(r0.xy, -r0.xy);
+  r0.x = saturate(1 + r0.x);
+  r0.x = sqrt(r0.x);
+  r0.xyw = r0.xxx * DecalCBs[r0.w].vDecalTS[2].xyz + r1.xyz;
+  r1.x = dot(r0.xyw, r0.xyw);
+  r1.x = rsqrt(r1.x);
+  r0.xyw = r1.xxx * r0.xyw;
+  o1.xyz = saturate(r0.xyw * float3(0.5,0.5,0.5) + float3(0.5,0.5,0.5));
+  o1.w = r0.z;
+  o2.w = r0.z;
+  o2.z = 1;
+  return;
+}
+
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//
+// Generated by Microsoft (R) HLSL Shader Compiler 6.3.9600.16384
+//
+//   using 3Dmigoto v1.3.11 on Mon Aug 20 18:28:03 2018
+//
+//
+// Note: shader requires additional functionality:
+//       Early depth-stencil
+//
+//
+// Buffer Definitions:
+//
+// cbuffer PER_FRAME
+// {
+//
+//   float4 g_PS_AlbedoCurve;           // Offset:  448 Size:    16
+//
+// }
+//
+// cbuffer DecalCB_PF
+// {
+//
+//   row_major float4x4 DecalCB_mViewProj;// Offset:    0 Size:    64 [unused]
+//   float4 DecalCB_vCameraPos;         // Offset:   64 Size:    16
+//   float4 DecalCB_vCameraFront;       // Offset:   80 Size:    16
+//   float4 DecalCB_vMisc;              // Offset:   96 Size:    16
+//
+// }
+//
+// cbuffer DecalCB
+// {
+//
+//   struct DecalData
+//   {
+//
+//       float4 vDecalTS[4];            // Offset:    0
+//       float4 vDiffuse;               // Offset:   64
+//       float4 vSpecular;              // Offset:   80
+//       float4 vGradient;              // Offset:   96
+//       float4 vTexRect;               // Offset:  112
+//       float4 vMisc;                  // Offset:  128
+//
+//   } DecalCBs[99];                    // Offset:    0 Size: 14256
+//
+// }
+//
+// cbuffer DecalCBIndirect
+// {
+//
+//   uint4 DecalCBIndex;                // Offset:    0 Size:    16
+//
+// }
+//
+//
+// Resource Bindings:
+//
+// Name                                 Type  Format         Dim Slot Elements
+// ------------------------------ ---------- ------- ----------- ---- --------
+// _tex0                             sampler      NA          NA    0        1
+// _tex1                             sampler      NA          NA    1        1
+// _tex2                             sampler      NA          NA    2        1
+// _tex3                             sampler      NA          NA    3        1
+// _tex4                             sampler      NA          NA    4        1
+// _tex5                             sampler      NA          NA    5        1
+// _tex0                             texture  float4          2d    0        1
+// _tex1                             texture  float4          2d    1        1
+// _tex2                             texture  float4          2d    2        1
+// _tex3                             texture  float4          2d    3        1
+// _tex4                             texture  float4          2d    4        1
+// _tex5                             texture  float4          2d    5        1
+// PER_FRAME                         cbuffer      NA          NA    2        1
+// DecalCB                           cbuffer      NA          NA    8        1
+// DecalCB_PF                        cbuffer      NA          NA    9        1
+// DecalCBIndirect                   cbuffer      NA          NA   11        1
+//
+//
+//
+// Input signature:
+//
+// Name                 Index   Mask Register SysValue  Format   Used
+// -------------------- ----- ------ -------- -------- ------- ------
+// SV_Position              0   xyzw        0      POS   float   xy
+// TEXCOORD                 0   xyzw        1     NONE   float   xy
+// TEXCOORD                 1   xyzw        2     NONE   float   xyz
+//
+//
+// Output signature:
+//
+// Name                 Index   Mask Register SysValue  Format   Used
+// -------------------- ----- ------ -------- -------- ------- ------
+// SV_Target                0   xyzw        0   TARGET   float   xyzw
+// SV_Target                1   xyzw        1   TARGET   float   xyzw
+// SV_Target                2   xyzw        2   TARGET   float   xyzw
+//
+ps_5_0
+dcl_globalFlags refactoringAllowed | forceEarlyDepthStencil
+dcl_constantbuffer cb2[29], immediateIndexed
+dcl_constantbuffer cb9[7], immediateIndexed
+dcl_constantbuffer cb8[891], dynamicIndexed
+dcl_constantbuffer cb11[1], immediateIndexed
+dcl_sampler s0, mode_default
+dcl_sampler s1, mode_default
+dcl_sampler s2, mode_default
+dcl_sampler s3, mode_default
+dcl_sampler s4, mode_default
+dcl_sampler s5, mode_default
+dcl_resource_texture2d (float,float,float,float) t0
+dcl_resource_texture2d (float,float,float,float) t1
+dcl_resource_texture2d (float,float,float,float) t2
+dcl_resource_texture2d (float,float,float,float) t3
+dcl_resource_texture2d (float,float,float,float) t4
+dcl_resource_texture2d (float,float,float,float) t5
+dcl_input_ps_siv linear noperspective v0.xy, position
+dcl_input_ps linear v1.xy
+dcl_input_ps linear v2.xyz
+dcl_output o0.xyzw
+dcl_output o1.xyzw
+dcl_output o2.xyzw
+dcl_temps 5
+dp3 r0.x, v2.xyzx, v2.xyzx
+rsq r0.x, r0.x
+mul r0.xyz, r0.xxxx, v2.xyzx
+dp3 r0.w, r0.xyzx, -cb9[5].xyzx
+mul r1.x, v0.x, cb9[4].w
+mul r1.y, v0.y, cb9[5].w
+sample_indexable(texture2d)(float,float,float,float) r1.z, r1.xyxx, t0.yzxw, s0
+sample_l_indexable(texture2d)(float,float,float,float) r1.xyw, r1.xyxx, t5.xywz, s5, l(0.000000)
+mad r1.xyw, r1.xyxw, l(2.000000, 2.000000, 0.000000, 2.000000), l(-1.000000, -1.000000, 0.000000, -1.000000)
+add r1.z, r1.z, -cb9[6].x
+div r1.z, cb9[6].y, r1.z
+div r0.w, r1.z, r0.w
+mad r0.xyz, r0.wwww, r0.xyzx, cb9[4].xyzx
+imul null, r0.w, cb11[0].x, l(9)
+mov r2.x, -cb8[r0.w + 0].w
+mov r2.y, -cb8[r0.w + 1].w
+mov r2.z, -cb8[r0.w + 2].w
+add r0.xyz, r0.xyzx, r2.xyzx
+dp3 r2.x, cb8[r0.w + 0].xyzx, r0.xyzx
+dp3 r2.y, -cb8[r0.w + 1].xyzx, r0.xyzx
+dp3 r2.z, cb8[r0.w + 2].xyzx, r0.xyzx
+div r0.xyz, r2.xyzx, cb8[r0.w + 3].xyzx
+mad r0.xyz, r0.xyzx, l(0.500000, 0.500000, 1.250000, 0.000000), l(0.500000, 0.500000, 0.625000, 0.000000)
+mad r2.xyzw, r0.xyxy, l(1.000000, 1.000000, -1.000000, -1.000000), l(0.000000, 0.000000, 1.000000, 1.000000)
+lt r2.xyzw, r2.xyzw, l(0.000000, 0.000000, 0.000000, 0.000000)
+or r2.xy, r2.zwzz, r2.xyxx
+or r1.z, r2.y, r2.x
+discard_nz r1.z
+add r2.xy, -r0.zzzz, l(1.000000, 0.800000, 0.000000, 0.000000)
+mad r0.xy, r0.xyxx, cb8[r0.w + 7].zwzz, cb8[r0.w + 7].xyxx
+mad r2.zw, r2.xxxx, l(0.000000, 0.000000, 1.000000, -1.000000), l(0.000000, 0.000000, 0.000000, 1.000000)
+lt r2.zw, r2.zzzw, l(0.000000, 0.000000, 0.000000, 0.000000)
+or r0.z, r2.w, r2.z
+discard_nz r0.z
+deriv_rtx_coarse r2.zw, v1.xxxy
+deriv_rty_coarse r3.xy, v1.xyxx
+sample_d_indexable(texture2d)(float,float,float,float) r0.z, r0.xyxx, t1.yzxw, s1, r2.zwzz, r3.xyxx
+sample_d_indexable(texture2d)(float,float,float,float) r3.xyzw, r0.xyxx, t2.xyzw, s2, r2.zwzz, r3.xyxx
+mad r1.z, r3.w, r0.z, -cb8[r0.w + 8].w
+mul r3.w, r0.z, r3.w
+mul r3.xyzw, r3.xyzw, cb8[r0.w + 4].xyzw
+lt r0.z, r1.z, l(0.000000)
+discard_nz r0.z
+dp3 r0.z, r1.xywx, r1.xywx
+rsq r0.z, r0.z
+mul r1.xyz, r0.zzzz, r1.xywx
+dp3 r0.z, r1.xyzx, cb8[r0.w + 2].xyzx
+mad r0.z, r0.z, l(0.500000), l(0.500000)
+mad_sat r0.z, r0.z, cb8[r0.w + 8].x, -cb8[r0.w + 8].y
+lt r1.x, r2.x, l(0.200000)
+movc r1.x, r1.x, l(5.000000), l(1.200000)
+mul r1.x, r1.x, r2.y
+mad r1.x, -r1.x, r1.x, l(1.000000)
+max r1.x, r1.x, l(0.000000)
+mul r0.z, r0.z, r1.x
+mul r0.z, r0.z, r3.w
+mov o0.w, r0.z
+sample_indexable(texture2d)(float,float,float,float) r1.xyz, r0.xyxx, t4.xyzw, s4
+sample_indexable(texture2d)(float,float,float,float) r0.xy, r0.xyxx, t3.xyzw, s3
+mad r0.xy, r0.yxyy, l(2.000000, 2.000000, 0.000000, 0.000000), l(-1.000000, -1.000000, 0.000000, 0.000000)
+mul r2.xyzw, r1.zxxx, cb8[r0.w + 5].wxyz
+mov_sat o2.y, r1.y
+dp3 r1.x, r2.yzwy, l(0.333333313, 0.333333313, 0.333333313, 0.000000)
+mov_sat o2.x, r2.x
+mad_sat r1.x, r1.x, l(2.40785336), l(-0.119028516)
+mul r1.yzw, r3.xxyz, l(0.000000, 5.000000, 5.000000, 5.000000)
+mad_sat r1.yzw, r1.xxxx, r1.yyzw, r3.xxyz
+add r2.xyz, r1.yzwy, -cb2[28].yyyy
+add r2.xyz, -r2.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+log r2.xyz, r2.xyzx
+add r3.xy, l(1.000000, 1.000000, 0.000000, 0.000000), -cb2[28].xzxx
+mad r3.xy, r1.xxxx, r3.xyxx, cb2[28].xzxx
+mul r2.xyz, r2.xyzx, r3.yyyy
+exp r2.xyz, r2.xyzx
+add r2.xyz, -r2.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+mul r1.x, r3.x, cb2[28].y
+mad r2.w, -cb2[28].y, r3.x, l(1.000000)
+mul r3.xyz, r1.yzwy, r3.xxxx
+ge r1.yzw, cb2[28].yyyy, r1.yyzw
+mad r2.xyz, r2.xyzx, r2.wwww, r1.xxxx
+movc r4.xyz, r1.yzwy, l(0,0,0,0), l(1.000000,1.000000,1.000000,0)
+and r1.xyz, r1.yzwy, l(0x3f800000, 0x3f800000, 0x3f800000, 0)
+mul r2.xyz, r2.xyzx, r4.xyzx
+mad r1.xyz, r3.xyzx, r1.xyzx, r2.xyzx
+dp3 r1.w, r1.xyzx, l(0.212600, 0.715200, 0.072200, 0.000000)
+add r1.xyz, -r1.wwww, r1.xyzx
+mad r1.xyz, cb9[6].zzzz, r1.xyzx, r1.wwww
+sqrt r1.xyz, r1.xyzx
+min o0.xyz, r1.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+mul r1.xyz, r0.yyyy, -cb8[r0.w + 1].xyzx
+mad r1.xyz, r0.xxxx, cb8[r0.w + 0].xyzx, r1.xyzx
+dp2 r0.x, r0.xyxx, -r0.xyxx
+add_sat r0.x, r0.x, l(1.000000)
+sqrt r0.x, r0.x
+mad r0.xyw, r0.xxxx, cb8[r0.w + 2].xyxz, r1.xyxz
+dp3 r1.x, r0.xywx, r0.xywx
+rsq r1.x, r1.x
+mul r0.xyw, r0.xyxw, r1.xxxx
+mad_sat o1.xyz, r0.xywx, l(0.500000, 0.500000, 0.500000, 0.000000), l(0.500000, 0.500000, 0.500000, 0.000000)
+mov o1.w, r0.z
+mov o2.w, r0.z
+mov o2.z, l(1.000000)
+ret
+// Approximately 103 instruction slots used
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
