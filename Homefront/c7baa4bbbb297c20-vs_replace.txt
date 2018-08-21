@@ -49,14 +49,18 @@ void main(
   float4 fDest;
 
   r0.xyz = v0.xyz * float3(2,2,0.800000012) + float3(-1,-1,-0.5);
-  r0.w = (int)DecalCBIndex.x * 9;
-  r0.xyz = DecalCBs[r0.w].vDecalTS[3].xyz * r0.xyz;
-  r1.xyz = DecalCBs[r0.w].vDecalTS[1].xyz * r0.yyy;
-  r1.xyz = r0.xxx * DecalCBs[r0.w].vDecalTS[0].xyz + r1.xyz;
-  r0.xyz = r0.zzz * DecalCBs[r0.w].vDecalTS[2].xyz + r1.xyz;
-  r1.x = DecalCBs[r0.w].vDecalTS[0].w + r0.x;
-  r1.y = DecalCBs[r0.w].vDecalTS[1].w + r0.y;
-  r1.z = DecalCBs[r0.w].vDecalTS[2].w + r0.z;
+
+uint4 u_r0;	
+// r0.w = (int)DecalCBIndex.x * 9;
+u_r0.w = DecalCBIndex.x; // * 9;
+
+  r0.xyz = DecalCBs[u_r0.w].vDecalTS[3].xyz * r0.xyz;
+  r1.xyz = DecalCBs[u_r0.w].vDecalTS[1].xyz * r0.yyy;
+  r1.xyz = r0.xxx * DecalCBs[u_r0.w].vDecalTS[0].xyz + r1.xyz;
+  r0.xyz = r0.zzz * DecalCBs[u_r0.w].vDecalTS[2].xyz + r1.xyz;
+  r1.x = DecalCBs[u_r0.w].vDecalTS[0].w + r0.x;
+  r1.y = DecalCBs[u_r0.w].vDecalTS[1].w + r0.y;
+  r1.z = DecalCBs[u_r0.w].vDecalTS[2].w + r0.z;
   r1.w = 1;
   o0.x = dot(DecalCB_mViewProj._m00_m01_m02_m03, r1.xyzw);
   o0.y = dot(DecalCB_mViewProj._m10_m11_m12_m13, r1.xyzw);
