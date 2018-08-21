@@ -46,11 +46,16 @@ void main(
   r0.xyz = _tex5.SampleLevel(_tex5_s, r0.xy, 0).xyz;
   r0.xyz = r0.xyz * float3(2,2,2) + float3(-1,-1,-1);
   r1.w = 1;
-  r0.w = (int)v1.x * 6;
-  r2.x = dot(mWeatherDecals[v1.x]._m00_m01_m02_m03, r1.xyzw);
-  r2.y = dot(mWeatherDecals[v1.x]._m10_m11_m12_m13, r1.xyzw);
-  r2.z = dot(mWeatherDecals[v1.x]._m20_m21_m22_m23, r1.xyzw);
-  r1.x = dot(mWeatherDecals[v1.x]._m30_m31_m32_m33, r1.xyzw);
+  // r0.w = (int)v1.x * 6;
+  r0.w = (int)v1.x; // * 6;
+  // r2.x = dot(mWeatherDecals[v1.x]._m00_m01_m02_m03, r1.xyzw);
+  // r2.y = dot(mWeatherDecals[v1.x]._m10_m11_m12_m13, r1.xyzw);
+  // r2.z = dot(mWeatherDecals[v1.x]._m20_m21_m22_m23, r1.xyzw);
+  // r1.x = dot(mWeatherDecals[v1.x]._m30_m31_m32_m33, r1.xyzw);
+  r2.x = dot(mWeatherDecals[v1.x].mClipToDecalSpace._m00_m01_m02_m03, r1.xyzw);
+  r2.y = dot(mWeatherDecals[v1.x].mClipToDecalSpace._m10_m11_m12_m13, r1.xyzw);
+  r2.z = dot(mWeatherDecals[v1.x].mClipToDecalSpace._m20_m21_m22_m23, r1.xyzw);
+  r1.x = dot(mWeatherDecals[v1.x].mClipToDecalSpace._m30_m31_m32_m33, r1.xyzw);
   r1.xyz = r2.xyz / r1.xxx;
   r2.xyzw = r1.xyxy * float4(1,1,-1,-1) + float4(0,0,1,1);
   r2.xyzw = cmp(r2.xyzw < float4(0,0,0,0));
@@ -64,17 +69,17 @@ void main(
   r0.x = rsqrt(r0.x);
   r0.x = r0.z * r0.x;
   r0.x = r0.x * 0.5 + 0.5;
-  r0.yz = mWeatherDecals[v1.x].xy * float2(2,2) + float2(-1,-1);
+  r0.yz = mWeatherDecals[v1.x].vGeneralParams.xy * float2(2,2) + float2(-1,-1);
   r0.x = saturate(r0.x * r0.y + -r0.z);
   r0.y = -0.200000003 + r1.z;
-  r1.xy = r1.xy * mWeatherDecals[v1.x].zw + mWeatherDecals[v1.x].xy;
+  r1.xy = r1.xy * mWeatherDecals[v1.x].vTextureRect.zw + mWeatherDecals[v1.x].vTextureRect.xy;
   r0.z = _tex2.Sample(_tex2_s, r1.xy).w;
   r0.y = r0.y * r1.w;
   r0.y = -r0.y * r0.y + 1;
   r0.y = max(0, r0.y);
   r0.x = r0.y * r0.x;
   r0.x = r0.z * r0.x;
-  o0.x = mWeatherDecals[v1.x].z * r0.x;
+  o0.x = mWeatherDecals[v1.x].vGeneralParams.z * r0.x;
   return;
 }
 
